@@ -7790,7 +7790,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		if (!pEnemy || !pEnemy->IsAlive())
 		{
 			if ( pEnemy )
+			{
 				DbgEnemyMsg( this, "    %s rejected: dead\n", pEnemy->GetDebugName() );
+			}
 			continue;
 		}
 		
@@ -7865,7 +7867,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		{
 			DbgEnemyMsg( this, "    %s accepted (1)\n", pEnemy->GetDebugName() );
 			if ( pBestEnemy )
+			{
 				DbgEnemyMsg( this, "    (%s displaced)\n", pBestEnemy->GetDebugName() );
+			}
 
 			iBestPriority	 = IRelationPriority ( pEnemy );
 			iBestDistSq		 = (pEnemy->GetAbsOrigin() - GetAbsOrigin() ).LengthSqr();
@@ -7879,7 +7883,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 		{
 			DbgEnemyMsg( this, "    %s accepted\n", pEnemy->GetDebugName() );
 			if ( pBestEnemy )
+			{
 				DbgEnemyMsg( this, "    (%s displaced due to priority, %d > %d )\n", pBestEnemy->GetDebugName(), IRelationPriority( pEnemy ), iBestPriority );
+			}
 			// this entity is disliked MORE than the entity that we
 			// currently think is the best visible enemy. No need to do
 			// a distance check, just get mad at this one for now.
@@ -8013,7 +8019,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 
 			DbgEnemyMsg( this, "    %s accepted\n", pEnemy->GetDebugName() );
 			if ( pBestEnemy )
+			{
 				DbgEnemyMsg( this, "    (%s displaced due to distance/visibility)\n", pBestEnemy->GetDebugName() );
+			}
 			fBestSeen		 = fCurSeen;
 			fBestVisible	 = fCurVisible;
 			iBestDistSq		 = iDistSq;
@@ -8022,7 +8030,9 @@ CBaseEntity *CAI_BaseNPC::BestEnemy( void )
 			bBestUnreachable = bUnreachable;
 		}
 		else
+		{
 			DbgEnemyMsg( this, "    %s rejected: lower priority\n", pEnemy->GetDebugName() );
+		}
 	}
 
 	DbgEnemyMsg( this, "} == %s\n", pBestEnemy->GetDebugName() );
@@ -8113,6 +8123,7 @@ float CAI_BaseNPC::CalcIdealYaw( const Vector &vecTarget )
 	{
 		vecProjection.x = -vecTarget.y;
 		vecProjection.y = vecTarget.x;
+		vecProjection.z = 0;
 
 		return UTIL_VecToYaw( vecProjection - GetLocalOrigin() );
 	}
@@ -8120,6 +8131,7 @@ float CAI_BaseNPC::CalcIdealYaw( const Vector &vecTarget )
 	{
 		vecProjection.x = vecTarget.y;
 		vecProjection.y = vecTarget.x;
+		vecProjection.z = 0;
 
 		return UTIL_VecToYaw( vecProjection - GetLocalOrigin() );
 	}
@@ -8747,11 +8759,11 @@ void CAI_BaseNPC::DrawDebugGeometryOverlays(void)
 		info.SetAttacker( this );
 		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 		info.SetInflictor( (CBaseEntity *)this ); 
-#else
-info.SetInflictor( ( AI_IsSinglePlayer() ) ? (CBaseEntity *)AI_GetSinglePlayer() : (CBaseEntity *)this );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+		#else
+		info.SetInflictor( ( AI_IsSinglePlayer() ) ? (CBaseEntity *)AI_GetSinglePlayer() : (CBaseEntity *)this );
+		#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
-info.SetDamageType( DMG_GENERIC );
+		info.SetDamageType( DMG_GENERIC );
 
 		m_debugOverlays &= ~OVERLAY_NPC_KILL_BIT;
 		TakeDamage( info );
@@ -9983,9 +9995,9 @@ CBaseEntity *CAI_BaseNPC::FindNamedEntity( const char *name, IEntityFindFilter *
 	{
 		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 		return UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-return ( CBaseEntity * )AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+		#else
+		return ( CBaseEntity * )AI_GetSinglePlayer();
+		#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	}
 	else if ( !stricmp( name, "!enemy" ) )
 	{
@@ -10002,9 +10014,9 @@ return ( CBaseEntity * )AI_GetSinglePlayer();
 		// punt for now
 		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 		return UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-return ( CBaseEntity * )AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+		#else
+		return ( CBaseEntity * )AI_GetSinglePlayer();
+		#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	}
 	else if (!stricmp( name, "self" ))
 	{
@@ -10026,9 +10038,9 @@ return ( CBaseEntity * )AI_GetSinglePlayer();
 		}
 		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 		return UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-return ( CBaseEntity * )AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+		#else
+		return ( CBaseEntity * )AI_GetSinglePlayer();
+		#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	}
 	else
 	{
@@ -11490,7 +11502,7 @@ CAI_BaseNPC::~CAI_BaseNPC(void)
 	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 	// this should stop a crash occuring when our death immediately creates a new NPC (eg headcrab from zombie) 
 	lagcompensation->RemoveNpcData( GetAIIndex() ); 
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	delete m_pLockedBestSound;
 
@@ -12013,9 +12025,9 @@ bool CAI_BaseNPC::CineCleanup()
 
 				#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 				int drop = UTIL_DropToFloor( this, MASK_NPCSOLID, UTIL_GetNearestVisiblePlayer(this) ); 
-#else
-int drop = UTIL_DropToFloor( this, MASK_NPCSOLID, UTIL_GetLocalPlayer() );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+				#else
+				int drop = UTIL_DropToFloor( this, MASK_NPCSOLID, UTIL_GetLocalPlayer() );
+				#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 				// Origin in solid?  Set to org at the end of the sequence
 				if ( ( drop < 0 ) || sv_test_scripted_sequences.GetBool() )
@@ -12094,9 +12106,9 @@ bool CAI_BaseNPC::FindSpotForNPCInRadius( Vector *pResult, const Vector &vStartP
 {
 	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pNPC->GetAbsOrigin()); 
-#else
-CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+	#else
+	CBasePlayer *pPlayer = AI_GetSinglePlayer();
+	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	QAngle fan;
 
@@ -12939,9 +12951,9 @@ bool CAI_BaseNPC::FindNearestValidGoalPos( const Vector &vTestPoint, Vector *pRe
 	{
 		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 		AI_Waypoint_t *pPathToPoint = GetPathfinder()->BuildRoute( GetAbsOrigin(), vCandidate, UTIL_GetNearestPlayer(GetAbsOrigin()), 5*12, NAV_NONE, true ); 
-#else
-AI_Waypoint_t *pPathToPoint = GetPathfinder()->BuildRoute( GetAbsOrigin(), vCandidate, AI_GetSinglePlayer(), 5*12, NAV_NONE, true );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+		#else
+		AI_Waypoint_t *pPathToPoint = GetPathfinder()->BuildRoute( GetAbsOrigin(), vCandidate, AI_GetSinglePlayer(), 5*12, NAV_NONE, true );
+		#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 		if ( pPathToPoint )
 		{

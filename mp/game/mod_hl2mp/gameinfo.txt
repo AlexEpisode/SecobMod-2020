@@ -1,18 +1,18 @@
 "GameInfo"
 {
-	game	"Source Engine Co-Operative Base Modification (2013)"
+	game	"SecobMod 2020"
 	title	""
 	title2	""
 	type multiplayer_only
 	nomodels 0
-	nohimodel 0
-	nocrosshair 0
+	nohimodel 1
+	nocrosshair 1
 	hidden_maps
 	{
 		"test_speakers"		1
 		"test_hardware"		1
 	}
-	supportsvr	1
+	supportsvr	0
 
 
 	FileSystem
@@ -20,91 +20,74 @@
 		SteamAppId				243750
 		
 		SearchPaths
-		{		
-			//=======================================
-			//Secob Game Search Paths
-			//=======================================
-			//SecobMod__ Allow custom content by user .vpk packaged mods.
-			game+mod			hl2mp/custom/*
-			game+mod			hl2/custom/*
-
-			//SecobMod__This is where we load in the Source SDK's hl2 vpk files.
-			//If we load the half-life2's files then we crash the game on startup, and these work just fine.
-			game				|all_source_engine_paths|hl2/hl2_english.vpk
-			game				|all_source_engine_paths|hl2/hl2_pak.vpk
+		{	
+			//===================
+			//Secob Search Paths.
+			//===================
+			game+mod+mod_write+default_write_path		|gameinfo_path|.
+			gamebin				|gameinfo_path|bin
+			logdir				|gameinfo_path|
+			Game				|all_source_engine_paths|hl2
+			Game				|all_source_engine_paths|hl2mp
 			game				|all_source_engine_paths|hl2/hl2_textures.vpk
-			game				|all_source_engine_paths|hl2/hl2_sound_vo_english.vpk
 			game				|all_source_engine_paths|hl2/hl2_sound_misc.vpk
 			game				|all_source_engine_paths|hl2/hl2_misc.vpk
 			platform			|all_source_engine_paths|platform/platform_misc.vpk
+			//Custom .vpk files - Remember to rename mod_hl2mp to that of your mods folder name!
+			game+mod			mod_hl2mp/custom
 
-			//SecobMod__ Set the gameinfo.txt's location to that of the mod search path here and add the bin folder.
-			game+mod+mod_write+default_write_path		|gameinfo_path|.
-			gamebin				|gameinfo_path|bin
+			//========================================================================================================================================================================================
+			//Valve Game Search Paths - Uncomment to access non-code related items from games (e.g. models, textures, sounds etc.). 
+			//The top lines in each game list allow SecobMod to see map files for loading in game, only HL:S,HL2/Ep1/Ep2,CS:S and Portal 1 work for map loading.
+			//========================================================================================================================================================================================
 			
-			//SecobMod__ Set the Source SDK 2013 Multiplayer (hl2mp) folder as the game search and write path.
-			game+game_write		hl2mp
-			gamebin				hl2mp/bin
-			game+mod			|all_source_engine_paths|hl2mp
-			game+mod			hl2mp/hl2mp_pak.vpk
-			Game				|gameinfo_path|.
+			//Half-Life 2	
+			game "|all_source_engine_paths|..\..\common\Half-Life 2\hl2"
+			game "|all_source_engine_paths|..\..\common\Half-Life 2\hl2\hl2_sound_vo_english.vpk"	
+			game "|all_source_engine_paths|..\..\common\Half-Life 2\hl2\hl2_pak.vpk"
 
-			//SecobMod__Finally we find any other missing content.
-			game				|all_source_engine_paths|hl2mp
-			game				|all_source_engine_paths|hl2
-			platform			|all_source_engine_paths|platform
+			//Half-Life 2: Episode1
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\episodic"
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\episodic\ep1_pak.vpk"
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\episodic\ep1_sound_vo_english.vpk"	
 
-			
-			
-			//=======================================
-			//Valve Game Search Paths
-			//=======================================
-			//SecobMod__Mount our additional games here
-			//This allows you to use other content in your games and load some maps from other games (but some maps crash to desktop, and portal2 maps can't be loaded due to version mismatch).
-			
-		//Episode 2	
-		//game "|gameinfo_path|..\..\common\Half-Life 2\ep2\ep2_sound_vo_english.vpk"	
-		//game "|gameinfo_path|..\..\common\Half-Life 2\ep2\ep2_pak.vpk"
+			//Half-Life 2: Episode 2	
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\ep2"
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\ep2\ep2_sound_vo_english.vpk"	
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\ep2\ep2_pak.vpk"
 
-		//Half-Life Source
-		//game "|gameinfo_path|..\..\common\Half-Life 2\hl1_hd\hl1_hd_pak.vpk"
-		//game "|gameinfo_path|..\..\common\Half-Life 2\hl1\hl1_sound_vo_english.vpk"
-		//game "|gameinfo_path|..\..\common\Half-Life 2\hl1\hl1_pak.vpk"
-		
-		//Counter Strike Source
-		//game "|gameinfo_path|..\..\common\Counter-Strike Source\cstrike"
-		//game "|gameinfo_path|..\..\common\Counter-Strike Source\cstrike\cstrike_english.vpk"
-		//game "|gameinfo_path|..\..\common\Counter-Strike Source\cstrike\cstrike_pak.vpk"
-		
-		//Portal1
-		//game "|gameinfo_path|..\..\common\Portal\portal"
-		//game "|gameinfo_path|..\..\common\Portal\portal\portal_pak.vpk"
-		
-		//Portal2
-		//game "|gameinfo_path|..\..\common\Portal 2\portal2"
-		//game "|gameinfo_path|..\..\common\Portal 2\portal2\pak01.vpk"
-
-		//Episode1
-		//game "|gameinfo_path|..\..\common\Half-Life 2\episodic\ep1_pak.vpk"
-		//game "|gameinfo_path|..\..\common\Half-Life 2\episodic\ep1_sound_vo_english.vpk"
-		
-		//Team Fortress 2
-		//game "|gameinfo_path|..\..\common\Team Fortress 2\tf"
-		//game "|gameinfo_path|..\..\common\Team Fortress 2\tf\tf2_textures.vpk"
-		//game "|gameinfo_path|..\..\common\Team Fortress 2\tf\tf2_sound_vo_english.vpk"
-		//game "|gameinfo_path|..\..\common\Team Fortress 2\tf\tf2_sound_misc.vpk"
-		//game "|gameinfo_path|..\..\common\Team Fortress 2\tf\tf2_misc.vpk"
-	
+			//Half-Life Source
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\hl1"
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\hl1_hd\hl1_hd_pak.vpk"
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\hl1\hl1_sound_vo_english.vpk"
+			//game "|all_source_engine_paths|..\..\common\Half-Life 2\hl1\hl1_pak.vpk"
 			
-		//SecobMod__If we want to load any official maps from any Valve .vpk enabled game we add the folder paths to them here.
-		//game "|gameinfo_path|..\..\common\Half-Life 2\ep2"	
-		//game "|gameinfo_path|..\..\common\Half-Life 2\episodic"
-		game "|gameinfo_path|..\..\common\Half-Life 2\hl2"
-		//game "|gameinfo_path|..\..\common\Half-Life 2\hl1"
-		//game "|gameinfo_path|..\..\common\portal\portal"
-		//game "|gameinfo_path|..\..\common\Portal 2\portal2"
-		//game "|gameinfo_path|..\..\common\Team Fortress 2\tf"
-		//game "|gameinfo_path|..\..\common\Counter-Strike Source\cstrike"
+			//Counter Strike Source
+			//game "|all_source_engine_paths|..\..\commonCounter-Strike Source\cstrike"
+			//game "|all_source_engine_paths|..\..\common\Counter-Strike Source\cstrike\cstrike_english.vpk"
+			//game "|all_source_engine_paths|..\..\common\Counter-Strike Source\cstrike\cstrike_pak.vpk"
+			
+			//Portal1
+			//game "|all_source_engine_paths|..\..\common\Portal\portal\"
+			//game "|all_source_engine_paths|..\..\common\Portal\portal\portal_pak.vpk"
+			
+			//Portal2
+			//game "|all_source_engine_paths|..\..\common\Portal 2\portal2\pak01_dir.vpk"
+			//game "|all_source_engine_paths|..\..\common\Portal 2\portal2\pak01_000.vpk"
+
+			//Team Fortress 2
+			//game "|all_source_engine_paths|..\..\common\Team Fortress 2\tf\tf2_textures.vpk"
+			//game "|all_source_engine_paths|..\..\common\Team Fortress 2\tf\tf2_sound_vo_english.vpk"
+			//game "|all_source_engine_paths|..\..\common\Team Fortress 2\tf\tf2_sound_misc.vpk"
+			//game "|all_source_engine_paths|..\..\common\Team Fortress 2\tf\tf2_misc.vpk"	
+
+			//The below games need filling in and may or may not work:
+
+			//Left 4 Dead
+
+			//Left 4 Dead 2
+
+			//Counter Strike: Global Offensive
 		}
 	}
 }

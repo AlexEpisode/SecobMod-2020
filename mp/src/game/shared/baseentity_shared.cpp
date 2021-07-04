@@ -636,10 +636,17 @@ void CBaseEntity::SetPredictionRandomSeed( const CUserCmd *cmd )
 	if ( !cmd )
 	{
 		m_nPredictionRandomSeed = -1;
+#ifdef GAME_DLL
+		m_nPredictionRandomSeedServer = -1;
+#endif
+
 		return;
 	}
 
 	m_nPredictionRandomSeed = ( cmd->random_seed );
+#ifdef GAME_DLL
+	m_nPredictionRandomSeedServer = ( cmd->server_random_seed );
+#endif
 }
 
 
@@ -1680,7 +1687,7 @@ void CBaseEntity::FireBullets( const FireBulletsInfo_t &info )
 	int iSeed = 0;
 	if ( IsPlayer() )
 	{
-		iSeed = CBaseEntity::GetPredictionRandomSeed() & 255;
+		iSeed = CBaseEntity::GetPredictionRandomSeed( info.m_bUseServerRandomSeed ) & 255;
 	}
 
 #if defined( HL2MP ) && defined( GAME_DLL )
@@ -2255,6 +2262,15 @@ int CBaseEntity::GetTracerAttachment( void )
 	return iAttachment;
 }
 
+float CBaseEntity::HealthFraction() const
+{
+	if ( GetMaxHealth() == 0 )
+		return 1.0f;
+
+	float flFraction = ( float )GetHealth() / ( float )GetMaxHealth();
+	flFraction = clamp( flFraction, 0.0f, 1.0f );
+	return flFraction;
+}
 
 int CBaseEntity::BloodColor()
 {
@@ -2503,12 +2519,6 @@ void CBaseEntity::CollisionRulesChanged()
 		}
 		IPhysicsObject *pList[VPHYSICS_MAX_OBJECT_LIST_COUNT];
 		int count = VPhysicsGetObjectList( pList, ARRAYSIZE(pList) );
-
-		if (count == NULL || pList == NULL)
-		{
-			return;
-		}
-
 		for ( int i = 0; i < count; i++ )
 		{
 			if ( pList[i] != NULL ) //this really shouldn't happen, but it does >_<

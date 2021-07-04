@@ -99,6 +99,7 @@
 #include "tf_gamerules.h"
 #include "tf_lobby.h"
 #include "player_vs_environment/tf_population_manager.h"
+#include "workshop/maps_workshop.h"
 
 extern ConVar tf_mm_trusted;
 extern ConVar tf_mm_servermode;
@@ -559,11 +560,11 @@ void DrawAllDebugOverlays( void )
 
 CServerGameDLL g_ServerGameDLL;
 // INTERFACEVERSION_SERVERGAMEDLL_VERSION_8 is compatible with the latest since we're only adding things to the end, so expose that as well.
-EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameDLL, IServerGameDLL008, INTERFACEVERSION_SERVERGAMEDLL_VERSION_8, g_ServerGameDLL );
+//EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameDLL, IServerGameDLL008, INTERFACEVERSION_SERVERGAMEDLL_VERSION_8, g_ServerGameDLL );
 EXPOSE_SINGLE_INTERFACE_GLOBALVAR(CServerGameDLL, IServerGameDLL, INTERFACEVERSION_SERVERGAMEDLL, g_ServerGameDLL);
 
 // When bumping the version to this interface, check that our assumption is still valid and expose the older version in the same way
-COMPILE_TIME_ASSERT( INTERFACEVERSION_SERVERGAMEDLL_INT == 9 );
+COMPILE_TIME_ASSERT( INTERFACEVERSION_SERVERGAMEDLL_INT == 10 );
 
 bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory, 
 		CreateInterfaceFn physicsFactory, CreateInterfaceFn fileSystemFactory, 
@@ -636,13 +637,6 @@ bool CServerGameDLL::DLLInit( CreateInterfaceFn appSystemFactory,
 	// Yes, both the client and game .dlls will try to Connect, the soundemittersystem.dll will handle this gracefully
 	if ( !soundemitterbase->Connect( appSystemFactory ) )
 		return false;
-		
-	//SecobMod__Information Okay so what is this doing here? Well it's the best way to work out how to dynamically mount contnet.
-	//Choose a map you want working perfectly. Edit the gameinfo.txt search paths till the map works as well as in a singleplayer game.
-	//Then enable this to see what the searchpaths look like once loaded in game and created a new dynamic mounting code using filesystem->AddSearchPath("", "")
-	//that mimics these search paths. Worked great for SDK 2007 and quite well for SDK 2013, so who knows what the future will bring.
-	Msg ("These are the DEFAULT search paths");
-	filesystem->PrintSearchPaths();
 
 	// cache the globals
 	gpGlobals = pGlobals;
@@ -762,9 +756,9 @@ void CServerGameDLL::DLLShutdown( void )
 
 	//SecobMod__Information: Clear the transition file.
 	#ifdef SecobMod__SAVERESTORE
-		FileHandle_t hFile = g_pFullFileSystem->Open( "cfg/transition.cfg", "w" );
+		FileHandle_t hFile = g_pFullFileSystem->Open( "transition.cfg", "w" );
 		CUtlBuffer buf( 0, 0, CUtlBuffer::TEXT_BUFFER );
-		g_pFullFileSystem->WriteFile( "cfg/transition.cfg", "MOD", buf );
+		g_pFullFileSystem->WriteFile( "transition.cfg", "MOD", buf );
 		g_pFullFileSystem->Close( hFile );
 	#endif //SecobMod__SAVERESTORE
 
@@ -983,7 +977,7 @@ bool CServerGameDLL::LevelInit( const char *pMapName, char const *pMapEntities, 
 
 	ResetWindspeed();
 	UpdateChapterRestrictions( pMapName );
-	
+
 	if ( IsX360() && !background && (gpGlobals->maxClients == 1) && (g_nCurrentChapterIndex >= 0) )
 	{
 		// Single player games tell xbox live what game & chapter the user is playing
@@ -1105,9 +1099,7 @@ bool g_bCheckForChainedActivate;
 	{ \
 		if ( bCheck ) \
 		{ \
-			char msg[ 1024 ];	\
-			Q_snprintf( msg, sizeof( msg ),  "Entity (%i/%s/%s) failed to call base class Activate()\n", pClass->entindex(), pClass->GetClassname(), STRING( pClass->GetEntityName() ) );	\
-			AssertMsg( g_bReceivedChainedActivate == true, msg ); \
+			AssertMsg( g_bReceivedChainedActivate, "Entity (%i/%s/%s) failed to call base class Activate()\n", pClass->entindex(), pClass->GetClassname(), STRING( pClass->GetEntityName() ) );	\
 		} \
 		g_bCheckForChainedActivate = false; \
 	}
@@ -1124,7 +1116,7 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 
 	if ( gEntList.ResetDeleteList() != 0 )
 	{
-		Msg( "ERROR: Entity delete queue not empty on level start!\n" );
+		Msg( "%s", "ERROR: Entity delete queue not empty on level start!\n" );
 	}
 
 	for ( CBaseEntity *pClass = gEntList.FirstEnt(); pClass != NULL; pClass = gEntList.NextEnt(pClass) )
@@ -1174,6 +1166,7 @@ void CServerGameDLL::ServerActivate( edict_t *pEdictList, int edictCount, int cl
 void CServerGameDLL::GameServerSteamAPIActivated( void )
 {
 #ifndef NO_STEAM
+	steamgameserverapicontext->Clear();
 	steamgameserverapicontext->Init();
 	if ( steamgameserverapicontext->SteamGameServer() && engine->IsDedicatedServer() )
 	{
@@ -1184,6 +1177,7 @@ void CServerGameDLL::GameServerSteamAPIActivated( void )
 #ifdef TF_DLL
 	GCClientSystem()->GameServerActivate();
 	InventoryManager()->GameServerSteamAPIActivated();
+	TFMapsWorkshop()->GameServerSteamAPIActivated();
 #endif
 }
 
@@ -1977,6 +1971,61 @@ const char *CServerGameDLL::GetServerBrowserGameData()
 }
 
 //-----------------------------------------------------------------------------
+void CServerGameDLL::Status( void (*print) (const char *fmt, ...) )
+{
+	if ( g_pGameRules )
+	{
+		g_pGameRules->Status( print );
+	}
+}
+
+//-----------------------------------------------------------------------------
+void CServerGameDLL::PrepareLevelResources( /* in/out */ char *pszMapName, size_t nMapNameSize,
+                                            /* in/out */ char *pszMapFile, size_t nMapFileSize )
+{
+#ifdef TF_DLL
+	TFMapsWorkshop()->PrepareLevelResources( pszMapName, nMapNameSize, pszMapFile, nMapFileSize );
+#endif // TF_DLL
+}
+
+//-----------------------------------------------------------------------------
+IServerGameDLL::ePrepareLevelResourcesResult
+CServerGameDLL::AsyncPrepareLevelResources( /* in/out */ char *pszMapName, size_t nMapNameSize,
+                                            /* in/out */ char *pszMapFile, size_t nMapFileSize,
+                                            float *flProgress /* = NULL */ )
+{
+#ifdef TF_DLL
+	return TFMapsWorkshop()->AsyncPrepareLevelResources( pszMapName, nMapNameSize, pszMapFile, nMapFileSize, flProgress );
+#endif // TF_DLL
+
+	if ( flProgress )
+	{
+		*flProgress = 1.f;
+	}
+	return IServerGameDLL::ePrepareLevelResources_Prepared;
+}
+
+//-----------------------------------------------------------------------------
+IServerGameDLL::eCanProvideLevelResult CServerGameDLL::CanProvideLevel( /* in/out */ char *pMapName, int nMapNameMax )
+{
+#ifdef TF_DLL
+	return TFMapsWorkshop()->OnCanProvideLevel( pMapName, nMapNameMax );
+#endif // TF_DLL
+	return IServerGameDLL::eCanProvideLevel_CannotProvide;
+}
+
+//-----------------------------------------------------------------------------
+bool CServerGameDLL::IsManualMapChangeOkay( const char **pszReason )
+{
+	if ( GameRules() )
+	{
+		return GameRules()->IsManualMapChangeOkay( pszReason );
+	}
+
+	return true;
+}
+
+//-----------------------------------------------------------------------------
 // Purpose: Called during a transition, to build a map adjacency list
 //-----------------------------------------------------------------------------
 void CServerGameDLL::BuildAdjacentMapList( void )
@@ -2036,16 +2085,44 @@ void CServerGameDLL::LoadMessageOfTheDay()
 			Q_strncpy( szMapName, STRING( gpGlobals->mapname ), sizeof( szMapName ) );
 			Q_strlower( szMapName );
 			
+			//On the off chance our game ever starts looking in the wrong place for briefing files, make sure we force our mod directory path.
+			char *finalPath = null;
+			char *nullBriefingPath = null;
+			char searchPaths[MAX_PATH * 2];
+			char searchPaths2[MAX_PATH * 2];
+			g_pFullFileSystem->GetSearchPath("LOGDIR", false, searchPaths, sizeof(searchPaths));
+			g_pFullFileSystem->GetSearchPath("LOGDIR", false, searchPaths2, sizeof(searchPaths2));
+			char *pPath = strtok(searchPaths, ";");
+			char *pPath2 = strtok(searchPaths2, ";");
+			while (pPath)
+			{
+				finalPath = Q_strncat(pPath, "maps\\map_briefings\\", sizeof(searchPaths), COPY_ALL_CHARACTERS);
+				finalPath = Q_strncat(finalPath, ("%s", szMapName), sizeof(searchPaths), COPY_ALL_CHARACTERS);
+				finalPath = Q_strncat(finalPath, ".html", sizeof(searchPaths), COPY_ALL_CHARACTERS);
+				break;
+			}
+			while (pPath2)
+			{
+				nullBriefingPath = Q_strncat(pPath2, "maps\\map_briefings\\", sizeof(searchPaths2), COPY_ALL_CHARACTERS);
+				nullBriefingPath = Q_strncat(nullBriefingPath, ("null_briefing.html"), sizeof(searchPaths2), COPY_ALL_CHARACTERS);
+				break;
+			}
+			//!!!!!!!!!!!!!!
+
 			char szMapString[MAX_PATH]; 
-			Q_snprintf( szMapString, sizeof( szMapString ), "maps/map_briefings/%s_briefing.txt", szMapName );
-		
+
+			Q_snprintf(szMapString, sizeof(szMapString), "%s", finalPath);
+
 			int length = filesystem->Size( szMapString, "GAME" );
 		
 			FileHandle_t hFile = filesystem->Open( szMapString, "rb", "GAME" );
 			
 			if ( hFile == FILESYSTEM_INVALID_HANDLE )
-			return;
-		
+			{
+				length = filesystem->Size(nullBriefingPath, "GAME");
+				hFile = filesystem->Open(nullBriefingPath, "rb", "GAME");				
+			}
+
 			filesystem->Read( data, length, hFile );
 		
 			data[length] = 0;
@@ -2053,7 +2130,10 @@ void CServerGameDLL::LoadMessageOfTheDay()
 			g_pStringTableInfoPanel->AddString( CBaseEntity::IsServer(), "briefing", length+1, data );
 		
 			if ( hFile == FILESYSTEM_INVALID_HANDLE )
-			return;
+			{
+				Msg ("Invalid briefing file specified");
+				return;
+			}
 		
 			filesystem->Read( data, length, hFile );
 			filesystem->Close( hFile );
@@ -2726,7 +2806,7 @@ void CServerGameClients::ClientActive( edict_t *pEdict, bool bLoadGame )
 
 	#if defined( TF_DLL )
 		Assert( pPlayer );
-		if ( pPlayer && !pPlayer->IsFakeClient() )
+		if ( pPlayer && !pPlayer->IsFakeClient() && !pPlayer->IsHLTV() && !pPlayer->IsReplay() )
 		{
 			CSteamID steamID;
 			if ( pPlayer->GetSteamID( &steamID ) )
@@ -2735,7 +2815,10 @@ void CServerGameClients::ClientActive( edict_t *pEdict, bool bLoadGame )
 			}
 			else
 			{
-				Log("WARNING: ClientActive, but we don't know his SteamID?\n");
+				if ( !pPlayer->IsReplay() && !pPlayer->IsHLTV() )
+				{
+					Log("WARNING: ClientActive, but we don't know his SteamID?\n");
+				}
 			}
 		}
 	#endif
@@ -2792,8 +2875,8 @@ void CServerGameClients::ClientDisconnect( edict_t *pEdict )
 			
 		//SecobMod__Information: If a client disconnects wipe them from the transition file. Note that if you want it so people who lag out can rejoin instantly without picking a class, then comment all this section out.
 		#ifdef SecobMod__SAVERESTORE
-		  KeyValues *pkvTransitionRestoreFile = new KeyValues( "cfg/transition.cfg" );
-			if ( pkvTransitionRestoreFile->LoadFromFile( filesystem, "cfg/transition.cfg" ) )
+		  KeyValues *pkvTransitionRestoreFile = new KeyValues( "transition.cfg" );
+			if ( pkvTransitionRestoreFile->LoadFromFile( filesystem, "transition.cfg" ) )
 			{
 				while ( pkvTransitionRestoreFile )
 				{
@@ -2833,7 +2916,10 @@ void CServerGameClients::ClientDisconnect( edict_t *pEdict )
 				}
 				else
 				{
-					Log("WARNING: ClientDisconnected, but we don't know his SteamID?\n");
+					if ( !player->IsReplay() && !player->IsHLTV() )
+					{
+						Log("WARNING: ClientDisconnected, but we don't know his SteamID?\n");
+					}
 				}
 			}
 		#endif
@@ -3448,7 +3534,7 @@ void MessageWriteEHandle( CBaseEntity *pEntity )
 	{
 		EHANDLE hEnt = pEntity;
 
-		int iSerialNum = hEnt.GetSerialNumber() & (1 << NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS) - 1;
+		int iSerialNum = hEnt.GetSerialNumber() & ( (1 << NUM_NETWORKED_EHANDLE_SERIAL_NUMBER_BITS) - 1 );
 		iEncodedEHandle = hEnt.GetEntryIndex() | (iSerialNum << MAX_EDICT_BITS);
 	}
 	else

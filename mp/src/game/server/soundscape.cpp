@@ -307,7 +307,7 @@ void CEnvSoundscape::UpdateForPlayer( ss_update_t &update )
 		// draw myself
 		NDebugOverlay::Box(GetAbsOrigin(), Vector(-10,-10,-10), Vector(10,10,10),  255, 0, 255, 64, NDEBUG_PERSIST_TILL_NEXT_SERVER );
 
-		if ( update.pPlayer )
+ 		if ( update.pPlayer )
 		{
 			audioparams_t &audio = update.pPlayer->GetAudioParams();
 			if ( audio.ent.Get() != this )

@@ -2522,10 +2522,8 @@ void CHL2_Player::Event_Killed( const CTakeDamageInfo &info )
 {
 	BaseClass::Event_Killed( info );
 
-	#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
-		FirePlayerProxyOutput( "PlayerDied", variant_t(), this, this );
-		NotifyScriptsOfDeath();
-	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+	FirePlayerProxyOutput( "PlayerDied", variant_t(), this, this );
+	NotifyScriptsOfDeath();
 }
 
 //-----------------------------------------------------------------------------

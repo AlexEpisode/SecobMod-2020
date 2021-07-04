@@ -1,4 +1,4 @@
-//====== Copyright � 1996-2008, Valve Corporation, All rights reserved. =======
+﻿//====== Copyright � 1996-2008, Valve Corporation, All rights reserved. =======
 //
 // Purpose: Main interface for loading and accessing Steamworks API's from the 
 //			Steam client.
@@ -40,7 +40,7 @@
 #error ???
 #endif 
 
-typedef struct
+typedef struct ValvePackingSentinel_t
 {
     uint32 m_u32;
     uint64 m_u64;
@@ -69,7 +69,8 @@ typedef int32 HSteamUser;
 #define __cdecl
 #endif
 extern "C" typedef void (__cdecl *SteamAPIWarningMessageHook_t)(int, const char *);
-
+extern "C" typedef void( *SteamAPI_PostAPIResultInProcess_t )(SteamAPICall_t callHandle, void *, uint32 unCallbackSize, int iCallbackNum);
+extern "C" typedef uint32 ( *SteamAPI_CheckCallbackRegistered_t )( int iCallbackNum );
 #if defined( __SNC__ )
 	#pragma diag_suppress=1700	   // warning 1700: class "%s" has virtual functions but non-virtual destructor
 #endif
@@ -88,6 +89,7 @@ class ISteamNetworking;
 class ISteamRemoteStorage;
 class ISteamScreenshots;
 class ISteamMusic;
+class ISteamMusicRemote;
 class ISteamGameServerStats;
 class ISteamPS3OverlayRender;
 class ISteamHTTP;
@@ -95,6 +97,9 @@ class ISteamUnifiedMessages;
 class ISteamController;
 class ISteamUGC;
 class ISteamAppList;
+class ISteamHTMLSurface;
+class ISteamInventory;
+class ISteamVideo;
 
 //-----------------------------------------------------------------------------
 // Purpose: Interface to creating a new steam instance, or to
@@ -167,7 +172,6 @@ public:
 	// user screenshots
 	virtual ISteamScreenshots *GetISteamScreenshots( HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion ) = 0;
 
-
 	// this needs to be called every frame to process matchmaking results
 	// redundant if you're already calling SteamAPI_RunCallbacks()
 	virtual void RunFrame() = 0;
@@ -208,9 +212,27 @@ public:
 	
 	// Music Player
 	virtual ISteamMusic *GetISteamMusic( HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion ) = 0;
+
+	// Music Player Remote
+	virtual ISteamMusicRemote *GetISteamMusicRemote(HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion) = 0;
+
+	// html page display
+	virtual ISteamHTMLSurface *GetISteamHTMLSurface(HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion) = 0;
+
+	// Helper functions for internal Steam usage
+	virtual void Set_SteamAPI_CPostAPIResultInProcess( SteamAPI_PostAPIResultInProcess_t func ) = 0;
+	virtual void Remove_SteamAPI_CPostAPIResultInProcess( SteamAPI_PostAPIResultInProcess_t func ) = 0;
+	virtual void Set_SteamAPI_CCheckCallbackRegisteredInProcess( SteamAPI_CheckCallbackRegistered_t func ) = 0;
+
+	// inventory
+	virtual ISteamInventory *GetISteamInventory( HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion ) = 0;
+
+	// Video
+	virtual ISteamVideo *GetISteamVideo( HSteamUser hSteamuser, HSteamPipe hSteamPipe, const char *pchVersion ) = 0;
 };
 
-#define STEAMCLIENT_INTERFACE_VERSION		"SteamClient014"
+
+#define STEAMCLIENT_INTERFACE_VERSION		"SteamClient017"
 
 //-----------------------------------------------------------------------------
 // Purpose: Base values for callback identifiers, each callback must
@@ -229,7 +251,7 @@ enum { k_iSteamAppsCallbacks = 1000 };
 enum { k_iSteamUserStatsCallbacks = 1100 };
 enum { k_iSteamNetworkingCallbacks = 1200 };
 enum { k_iClientRemoteStorageCallbacks = 1300 };
-enum { k_iSteamUserItemsCallbacks = 1400 };
+enum { k_iClientDepotBuilderCallbacks = 1400 };
 enum { k_iSteamGameServerItemsCallbacks = 1500 };
 enum { k_iClientUtilsCallbacks = 1600 };
 enum { k_iSteamGameCoordinatorCallbacks = 1700 };
@@ -256,7 +278,13 @@ enum { k_iClientShortcutsCallbacks = 3700 };
 enum { k_iClientRemoteControlManagerCallbacks = 3800 };
 enum { k_iSteamAppListCallbacks = 3900 };
 enum { k_iSteamMusicCallbacks = 4000 };
-
+enum { k_iSteamMusicRemoteCallbacks = 4100 };
+enum { k_iClientVRCallbacks = 4200 };
+enum { k_iClientReservedCallbacks = 4300 };
+enum { k_iSteamReservedCallbacks = 4400 };
+enum { k_iSteamHTMLSurfaceCallbacks = 4500 };
+enum { k_iClientVideoCallbacks = 4600 };
+enum { k_iClientInventoryCallbacks = 4700 };
 
 //-----------------------------------------------------------------------------
 // The CALLBACK macros are for client side callback logging enabled with
@@ -368,7 +396,7 @@ struct callbackname : SteamCallback_t { \
 	END_CALLBACK_INTERNAL_END()
 
 #define END_DEFINE_CALLBACK_8() \
-	END_CALLBACK_INTERNAL_BEGIN( 7 ) \
+	END_CALLBACK_INTERNAL_BEGIN( 8 ) \
 	END_CALLBACK_INTERNAL_SWITCH( 0 ) \
 	END_CALLBACK_INTERNAL_SWITCH( 1 ) \
 	END_CALLBACK_INTERNAL_SWITCH( 2 ) \
@@ -380,7 +408,7 @@ struct callbackname : SteamCallback_t { \
 	END_CALLBACK_INTERNAL_END()
 
 #define END_DEFINE_CALLBACK_9() \
-	END_CALLBACK_INTERNAL_BEGIN( 7 ) \
+	END_CALLBACK_INTERNAL_BEGIN( 9 ) \
 	END_CALLBACK_INTERNAL_SWITCH( 0 ) \
 	END_CALLBACK_INTERNAL_SWITCH( 1 ) \
 	END_CALLBACK_INTERNAL_SWITCH( 2 ) \
@@ -390,6 +418,86 @@ struct callbackname : SteamCallback_t { \
 	END_CALLBACK_INTERNAL_SWITCH( 6 ) \
 	END_CALLBACK_INTERNAL_SWITCH( 7 ) \
 	END_CALLBACK_INTERNAL_SWITCH( 8 ) \
+	END_CALLBACK_INTERNAL_END()
+
+#define END_DEFINE_CALLBACK_10() \
+	END_CALLBACK_INTERNAL_BEGIN( 10 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 0 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 1 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 2 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 3 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 4 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 5 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 6 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 7 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 8 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 9 ) \
+	END_CALLBACK_INTERNAL_END()
+
+#define END_DEFINE_CALLBACK_11() \
+	END_CALLBACK_INTERNAL_BEGIN( 11 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 0 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 1 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 2 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 3 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 4 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 5 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 6 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 7 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 8 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 9 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 10 ) \
+	END_CALLBACK_INTERNAL_END()
+
+#define END_DEFINE_CALLBACK_12() \
+	END_CALLBACK_INTERNAL_BEGIN( 12 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 0 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 1 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 2 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 3 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 4 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 5 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 6 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 7 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 8 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 9 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 10 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 11 ) \
+	END_CALLBACK_INTERNAL_END()
+
+#define END_DEFINE_CALLBACK_13() \
+	END_CALLBACK_INTERNAL_BEGIN( 13 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 0 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 1 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 2 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 3 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 4 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 5 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 6 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 7 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 8 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 9 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 10 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 11 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 12 ) \
+	END_CALLBACK_INTERNAL_END()
+
+#define END_DEFINE_CALLBACK_14() \
+	END_CALLBACK_INTERNAL_BEGIN( 14 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 0 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 1 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 2 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 3 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 4 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 5 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 6 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 7 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 8 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 9 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 10 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 11 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 12 ) \
+	END_CALLBACK_INTERNAL_SWITCH( 13 ) \
 	END_CALLBACK_INTERNAL_END()
 
 #endif // ISTEAMCLIENT_H

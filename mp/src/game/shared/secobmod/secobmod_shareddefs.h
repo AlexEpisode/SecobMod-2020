@@ -88,7 +88,7 @@
 /* Experimental Enhancements. */
 /******************************/
 #define SecobMod__ENABLE_IN_TESTING_ITEMS //Enables buggy test items again, such as the Portal gun. Make sure you have Portal installed, and the portal items line enabled.
-#define SecobMod__ENABLE_PORTAL_ITEMS //Currently it likes to crash alot!.
+#define SecobMod__ENABLE_PORTAL_ITEMS //Remember to enable (remove the //) Portal content in your GameInfo.txt file.
 
 /******************/
 /* SDK Bug Fixes. */

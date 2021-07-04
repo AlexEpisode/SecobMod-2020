@@ -525,7 +525,7 @@ void CGameMovement::DiffPrint( char const *fmt, ... )
 #endif // !PREDICTION_ERROR_CHECK_LEVEL
 
 #ifndef _XBOX
-void COM_Log( char *pszFile, const char *fmt, ...)
+void COM_Log( const char *pszFile, const char *fmt, ...)
 {
 	va_list		argptr;
 	char		string[1024];
@@ -1840,7 +1840,7 @@ void CGameMovement::Accelerate( Vector& wishdir, float wishspeed, float accel )
 #ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 	currentspeed = sqrt( DotProduct(mv->m_vecVelocity, mv->m_vecVelocity) );
 #else
-currentspeed = mv->m_vecVelocity.Dot(wishdir);
+	currentspeed = mv->m_vecVelocity.Dot(wishdir);
 #endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	// Reduce wishspeed by the amount of veer.
@@ -2166,7 +2166,7 @@ void CGameMovement::FullObserverMove( void )
 {
 	int mode = player->GetObserverMode();
 
-	if ( mode == OBS_MODE_IN_EYE || mode == OBS_MODE_CHASE )
+	if ( mode == OBS_MODE_IN_EYE || mode == OBS_MODE_CHASE || mode == OBS_MODE_POI )
 	{
 		CBaseEntity * target = player->GetObserverTarget();
 
@@ -2452,7 +2452,7 @@ bool CGameMovement::CheckJumpButton( void )
 	if ( g_bMovementOptimizations )
 	{
 #if defined(HL2_DLL) || defined(HL2_CLIENT_DLL)
-		Assert( sv_gravity.GetFloat() == 600.0f );
+		Assert( GetCurrentGravity() == 600.0f );
 		
 	#ifdef SecobMod__USE_PLAYERCLASSES
 		flMul = sqrt(2 * sv_gravity.GetFloat() * GAMEMOVEMENT_JUMP_HEIGHT);

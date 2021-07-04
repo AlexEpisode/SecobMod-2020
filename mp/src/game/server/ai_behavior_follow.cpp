@@ -767,6 +767,7 @@ void CAI_FollowBehavior::GatherConditions( void )
 
 #ifdef HL2_EPISODIC
 	// Let followers know if the player is lit in the darkness
+	//SecobMod
 	if ( GetFollowTarget()->IsPlayer() && HL2MPRules()->IsAlyxInDarknessMode() )
 	{
 		if ( LookerCouldSeeTargetInDarkness( GetOuter(), GetFollowTarget() ) )
@@ -851,6 +852,7 @@ bool CAI_FollowBehavior::ShouldMoveToFollowTarget()
 		return false;
 
 #ifdef HL2_EPISODIC
+	//SecobMod
 	if ( HL2MPRules()->IsAlyxInDarknessMode() )
 	{
 		// If we're in darkness mode, the player needs to be lit by
@@ -1971,6 +1973,7 @@ void CAI_FollowBehavior::BuildScheduleTestBits()
 
 #ifdef HL2_EPISODIC
 		// In Alyx darkness mode, break on the player turning their flashlight off
+		//SecobMod
 		if ( HL2MPRules()->IsAlyxInDarknessMode() )
 		{
 			if ( IsCurSchedule(SCHED_FOLLOW, false) || IsCurSchedule(SCHED_MOVE_TO_FACE_FOLLOW_TARGET, false) ||

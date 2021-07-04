@@ -24,6 +24,7 @@
 #include "vgui/IInput.h"
 #include "vgui/ILocalize.h"
 #include "multiplay_gamerules.h"
+#include "voice_status.h"
 
 
 // memdbgon must be the last include file in a .cpp file!!!
@@ -36,6 +37,7 @@ ConVar hud_saytext_time( "hud_saytext_time", "12", 0 );
 ConVar cl_showtextmsg( "cl_showtextmsg", "1", 0, "Enable/disable text messages printing on the screen." );
 ConVar cl_chatfilters( "cl_chatfilters", "63", FCVAR_CLIENTDLL | FCVAR_ARCHIVE, "Stores the chat filter settings " );
 ConVar cl_chatfilter_version( "cl_chatfilter_version", "0", FCVAR_CLIENTDLL | FCVAR_ARCHIVE | FCVAR_HIDDEN, "Stores the chat filter version" );
+ConVar cl_mute_all_comms("cl_mute_all_comms", "1", FCVAR_ARCHIVE, "If 1, then all communications from a player will be blocked when that player is muted, including chat messages.");
 
 const int kChatFilterVersion = 1;
 
@@ -1170,33 +1172,37 @@ void CBaseHudChat::StartMessageMode( int iMessageModeType )
 	const wchar_t *pszPrompt = ( m_nMessageMode == MM_SAY ) ? g_pVGuiLocalize->Find( "#chat_say" ) : g_pVGuiLocalize->Find( "#chat_say_team" ); 
 	if ( pszPrompt )
 	{
+		//SecobMod - Show the bubble if the chat window is visible.
+		#ifdef SecobMod__MULTIPLAYER_CHAT_BUBBLES
+		m_pChatInput->SetPrompt( L"Say :" );
+		g_iChatBubble = 1; //all chat bubble
+		#endif //SecobMod__MULTIPLAYER_CHAT_BUBBLES
 		m_pChatInput->SetPrompt( pszPrompt );
 	}
 	else
 	{
 		#ifdef SecobMod__MULTIPLAYER_CHAT_BUBBLES
-			if ( m_nMessageMode == MM_SAY )
-			{
-				m_pChatInput->SetPrompt( L"Say :" );
-				g_iChatBubble = 1; //all chat bubble
-			}
-			else
-			{
-				m_pChatInput->SetPrompt( L"Say (TEAM) :" );
-				g_iChatBubble = 2; //team chat bubble
-			}
+		if ( m_nMessageMode == MM_SAY )
+		{
+			m_pChatInput->SetPrompt( L"Say :" );
+			g_iChatBubble = 1; //all chat bubble
+		}
+		else
+		{
+			m_pChatInput->SetPrompt( L"Say (TEAM) :" );
+			g_iChatBubble = 2; //team chat bubble
+		}
 		#else
-			if ( m_nMessageMode == MM_SAY )
-			{
-				m_pChatInput->SetPrompt( L"Say :" );
-			}
-			else
-			{
-				m_pChatInput->SetPrompt( L"Say (TEAM) :" );
-			}
+		if ( m_nMessageMode == MM_SAY )
+		{
+			m_pChatInput->SetPrompt( L"Say :" );
+		}
+		else
+		{
+			m_pChatInput->SetPrompt( L"Say (TEAM) :" );
+		}
 		#endif //SecobMod__MULTIPLAYER_CHAT_BUBBLES
 	}
-	
 	if ( GetChatHistory() )
 	{
 		GetChatHistory()->SetMouseInputEnabled( true );
@@ -1768,6 +1774,13 @@ void CBaseHudChat::ChatPrintf( int iPlayerIndex, int iFilter, const char *fmt, .
 	if ( iFilter != CHAT_FILTER_NONE )
 	{
 		if ( !(iFilter & GetFilterFlags() ) )
+			return;
+	}
+
+	// If a player is muted for voice, also mute them for text because jerks gonna jerk.
+	if ( cl_mute_all_comms.GetBool() && iPlayerIndex != 0 )
+	{
+		if ( GetClientVoiceMgr() && GetClientVoiceMgr()->IsPlayerBlocked( iPlayerIndex ) )	
 			return;
 	}
 

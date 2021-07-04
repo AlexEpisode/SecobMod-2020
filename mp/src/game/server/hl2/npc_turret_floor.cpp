@@ -468,14 +468,14 @@ void CNPC_FloorTurret::Retire( void )
 		{
 			SetActivity( (Activity) ACT_FLOOR_TURRET_CLOSE );
 	
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	if (IsPortalTurret())
 	{
-EmitSound( "NPC_FloorTurret.TalkRetire" );
+		EmitSound( "NPC_FloorTurret.TalkRetire" );
 	}
 	else
 	{
-EmitSound( "NPC_FloorTurret.Retire" );
+		EmitSound( "NPC_FloorTurret.Retire" );
 	}
 
 			//Notify of the retraction
@@ -525,14 +525,14 @@ void CNPC_FloorTurret::Deploy( void )
 		m_bActive = true;
 		SetActivity( (Activity) ACT_FLOOR_TURRET_OPEN );
 		
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	if (IsPortalTurret())
 	{
-	EmitSound( "NPC_FloorTurret.TalkDeploy" );
+		EmitSound( "NPC_FloorTurret.TalkDeploy" );
 	}
 	else
 	{
-	EmitSound( "NPC_FloorTurret.Deploy" );
+		EmitSound( "NPC_FloorTurret.Deploy" );
 	}
 
 		//Notify we're deploying
@@ -549,14 +549,14 @@ void CNPC_FloorTurret::Deploy( void )
 		m_flPlaybackRate = 0;
 		SetThink( &CNPC_FloorTurret::SearchThink );
 
-//SecobMod__Information: Set Portal changes for turrets.
+		//SecobMod__Information: Set Portal changes for turrets.
 		if (IsPortalTurret())
 		{
-		EmitSound( "NPC_FloorTurret.TalkSearch" );	
+			EmitSound( "NPC_FloorTurret.TalkSearch" );	
 		}
 		else
 		{
-		EmitSound( "NPC_FloorTurret.Move" );
+			EmitSound( "NPC_FloorTurret.Move" );
 		}
 	}
 
@@ -571,10 +571,10 @@ void CNPC_FloorTurret::OnPhysGunPickup( CBasePlayer *pPhysGunUser, PhysGunPickup
 	m_hPhysicsAttacker = pPhysGunUser;
 	m_flLastPhysicsInfluenceTime = gpGlobals->curtime;
 	
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	if (IsPortalTurret())
 	{
-	EmitSound( "NPC_FloorTurret.TalkPickup" );
+		EmitSound( "NPC_FloorTurret.TalkPickup" );
 	}
 	
 	// Drop our mass a lot so that we can be moved easily with +USE
@@ -694,14 +694,14 @@ bool CNPC_FloorTurret::HandleInteraction(int interactionType, void *data, CBaseC
 		CalculateMeleeDamageForce( &info, forward, GetAbsOrigin() );
 		TakeDamage( info );
 
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	if (IsPortalTurret())
 	{
-	EmitSound( "NPC_FloorTurret.TalkShotAt" );
+		EmitSound( "NPC_FloorTurret.TalkShotAt" );
 	}
 	else
 	{
-	EmitSound( "NPC_Combine.WeaponBash" );
+		EmitSound( "NPC_Combine.WeaponBash" );
 	}
 		return true;
 	}
@@ -791,16 +791,16 @@ bool CNPC_FloorTurret::UpdateFacing( void )
 
 void CNPC_FloorTurret::DryFire( void )
 {
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	if (IsPortalTurret())
 	{
-	EmitSound( "NPC_FloorTurret.TalkActive" );
-	EmitSound( "NPC_FloorTurret.TalkDeploy" );
+		EmitSound( "NPC_FloorTurret.TalkActive" );
+		EmitSound( "NPC_FloorTurret.TalkDeploy" );
 	}
 	else
 	{
-	EmitSound( "NPC_FloorTurret.DryFire");
-	EmitSound( "NPC_FloorTurret.Activate" );
+		EmitSound( "NPC_FloorTurret.DryFire");
+		EmitSound( "NPC_FloorTurret.Activate" );
 	}
 
  	if ( RandomFloat( 0, 1 ) > 0.5 )
@@ -1172,13 +1172,13 @@ void CNPC_FloorTurret::SearchThink( void )
 		{		
 		//SecobMod__Information: Set Portal changes for turrets.
 		if (IsPortalTurret())
-	{
-	EmitSound( "NPC_FloorTurret.TalkActive" );
-	}
-	else
-	{
-	EmitSound( "NPC_FloorTurret.Activate" );
-	}
+		{
+			EmitSound( "NPC_FloorTurret.TalkActive" );
+		}
+		else
+		{
+			EmitSound( "NPC_FloorTurret.Activate" );
+		}
 
 			
 			m_flNextActivateSoundTime = gpGlobals->curtime + 3.0;
@@ -1237,14 +1237,14 @@ void CNPC_FloorTurret::AutoSearchThink( void )
 			#ifdef SecobMod__ENABLE_PORTAL_ITEMS
 			if (IsPortalTurret())
 			{
-			EmitSound( "NPC_FloorTurret.TalkAutosearch" );
+				EmitSound( "NPC_FloorTurret.TalkAutosearch" );
 			}
 			else
 			{
-			EmitSound( "NPC_FloorTurret.Alert" );
+				EmitSound( "NPC_FloorTurret.Alert" );
 			}
 			#else
-			EmitSound( "NPC_FloorTurret.Alert" );
+				EmitSound( "NPC_FloorTurret.Alert" );
 			#endif //SecobMod__ENABLE_PORTAL_ITEMS
 		}
 	}
@@ -1422,27 +1422,27 @@ void CNPC_FloorTurret::TippedThink( void )
 			{
 				//Make any last death noises and anims
 
-//SecobMod__Information: Set Portal changes for turrets.				
+	//SecobMod__Information: Set Portal changes for turrets.				
 	if (IsPortalTurret())
 	{
-	EmitSound( "NPC_FloorTurret.TalkTipped" );	
+		EmitSound( "NPC_FloorTurret.TalkTipped" );	
 	}
 	else
 	{
-	EmitSound( "NPC_FloorTurret.Die" );
+		EmitSound( "NPC_FloorTurret.Die" );
 	}
 				SpinDown();
 
 				SetActivity( (Activity) ACT_FLOOR_TURRET_CLOSE );
 				
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	if (IsPortalTurret())
 	{
-	EmitSound( "NPC_FloorTurret.TalkRetire" );	
+		EmitSound( "NPC_FloorTurret.TalkRetire" );	
 	}
 	else
 	{
-	EmitSound( "NPC_FloorTurret.Retract" );
+		EmitSound( "NPC_FloorTurret.Retract" );
 	}
 
 				CTakeDamageInfo	info;
@@ -1639,14 +1639,14 @@ bool CNPC_FloorTurret::PreThink( turretState_e state )
 				if ( !m_bNoAlarmSounds )
 				{
 					
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	if (IsPortalTurret())
 	{
-	EmitSound( "NPC_FloorTurret.DeployingKlaxon" );
+		EmitSound( "NPC_FloorTurret.DeployingKlaxon" );
 	}
 	else
 	{
-	EmitSound( "NPC_FloorTurret.Alarm" );
+		EmitSound( "NPC_FloorTurret.Alarm" );
 	}
 				}
 			}
@@ -1716,16 +1716,16 @@ void CNPC_FloorTurret::SetEyeState( eyeState_t state )
 		m_hLaser->EntsInit( this, this );
 		m_hLaser->FollowEntity( this );
 
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	if (IsPortalTurret())
 	{
-	m_hLaser->SetStartAttachment( LookupAttachment( "light" ) );
-	m_hLaser->SetEndAttachment( LookupAttachment( "eyes" ) );	
+		m_hLaser->SetStartAttachment( LookupAttachment( "light" ) );
+		m_hLaser->SetEndAttachment( LookupAttachment( "eyes" ) );	
 	}
 	else
 	{
-	m_hLaser->SetStartAttachment( LookupAttachment( "laser_start" ) );
-	m_hLaser->SetEndAttachment( LookupAttachment( "laser_end" ) );	
+		m_hLaser->SetStartAttachment( LookupAttachment( "laser_start" ) );
+		m_hLaser->SetEndAttachment( LookupAttachment( "laser_end" ) );	
 	}
 		
 		m_hLaser->SetNoise( 0 );
@@ -2016,7 +2016,7 @@ int CNPC_FloorTurret::OnTakeDamage( const CTakeDamageInfo &info )
 		// Bullets, but not buckshot, do extra push
 		newInfo.ScaleDamageForce( 2.5f );
 	}
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	else if ( info.GetDamageType() & DMG_DISSOLVE && IsPortalTurret())
 	{
 		newInfo.ScaleDamageForce( 100.0f );
@@ -2059,11 +2059,11 @@ QAngle CNPC_FloorTurret::PreferredCarryAngles( void )
 	static QAngle g_prefAngles;
 
 	Vector vecUserForward;
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
+	#else
+		CBasePlayer *pPlayer = AI_GetSinglePlayer();
+	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	pPlayer->EyeVectors( &vecUserForward );
 
@@ -2212,14 +2212,14 @@ void CNPC_FloorTurret::BreakThink( void )
 	// K-boom
 	RadiusDamage( CTakeDamageInfo( this, this, 15.0f, DMG_BLAST ), vecOrigin, (10*12), CLASS_NONE, this );
 
-//SecobMod__Information: Set Portal changes for turrets.
+	//SecobMod__Information: Set Portal changes for turrets.
 	if (IsPortalTurret())
 	{
-	EmitSound( "NPC_FloorTurret.TalkDisabled" );
+		EmitSound( "NPC_FloorTurret.TalkDisabled" );
 	}
 	else
 	{
-	EmitSound( "NPC_FloorTurret.Destruct" );
+		EmitSound( "NPC_FloorTurret.Destruct" );
 	}
 
 	breakablepropparams_t params( GetAbsOrigin(), GetAbsAngles(), vec3_origin, RandomAngularImpulse( -800.0f, 800.0f ) );

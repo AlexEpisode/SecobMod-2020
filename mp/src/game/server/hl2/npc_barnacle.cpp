@@ -28,6 +28,7 @@
 #include "npc_BaseZombie.h"
 #include "modelentities.h"
 
+//SecobMod
 #ifdef HL2_EPISODIC
 #include "npc_antlion.h"
 #endif
@@ -263,6 +264,7 @@ void CNPC_Barnacle::Spawn()
 	SetSolid( SOLID_BBOX );
 	AddSolidFlags( FSOLID_NOT_STANDABLE );
 	CollisionProp()->SetSurroundingBoundsType( USE_GAME_CODE );
+//SecobMod
 #ifdef HL2_EPISODIC // the episodic barnacle is solid, so it can be sawbladed.
 	SetMoveType( MOVETYPE_PUSH );
 #else
@@ -280,6 +282,7 @@ void CNPC_Barnacle::Spawn()
 	m_takedamage		= DAMAGE_YES;
 	m_pConstraint		= NULL;
 	m_nShakeCount = 0;
+//SecobMod
 #ifdef HL2_EPISODIC // the episodic barnacle is solid, so it can be sawbladed.
 	IPhysicsObject *pPhys = VPhysicsInitShadow( false, false );
 	if (pPhys)
@@ -488,6 +491,7 @@ void CNPC_Barnacle::BarnacleThink ( void )
 			else
 			{
 				// Finished digesting
+//SecobMod
 #ifdef HL2_EPISODIC
 				// have to save this off because LostPrey() resets it (and if we take damage before hitting that,
 				// then the dead thing will go flying)
@@ -533,6 +537,7 @@ void CNPC_Barnacle::BarnacleThink ( void )
 			else
 			{
 				// Finished digesting
+//SecobMod
 #ifdef HL2_EPISODIC
 				// have to save this off because LostPrey() resets it (and if we take damage before hitting that,
 				// then the dead thing will go flying)
@@ -1363,6 +1368,7 @@ CRagdollProp *CNPC_Barnacle::AttachRagdollToTongue( CBaseAnimating *pAnimating )
 	CRagdollProp *pRagdoll = CreateServerRagdollAttached( pAnimating, vec3_origin, -1, COLLISION_GROUP_NONE, pTonguePhysObject, m_hTongueTip, 0, vecBonePos, m_iGrabbedBoneIndex, vec3_origin );
 	if ( pRagdoll )
 	{
+//SecobMod
 #ifdef HL2_EPISODIC
 		PhysEnableEntityCollisions( this, pAnimating );
 		PhysDisableEntityCollisions( this, pRagdoll );
@@ -1390,7 +1396,7 @@ void CNPC_Barnacle::InputDropTongue( inputdata_t &inputdata )
 //-----------------------------------------------------------------------------
 void CNPC_Barnacle::AttachTongueToTarget( CBaseEntity *pTouchEnt, Vector vecGrabPos )
 {
-
+//SecobMod
 #ifdef HL2_EPISODIC
 	m_OnGrab.Set( pTouchEnt, this, this );
 #endif
@@ -1436,6 +1442,7 @@ void CNPC_Barnacle::AttachTongueToTarget( CBaseEntity *pTouchEnt, Vector vecGrab
 	}
 
 	SetEnemy( pTouchEnt );
+//SecobMod
 #ifdef HL2_EPISODIC
 	// Disable collision between myself and the obejct I've seized.
 	PhysDisableEntityCollisions( this, pTouchEnt );
@@ -1684,7 +1691,7 @@ void CNPC_Barnacle::BitePrey( void )
 		m_hRagdoll->SetDamageEntity( NULL );
 	}
 
-	
+//SecobMod	
 #ifdef HL2_EPISODIC
 	m_bSwallowingPoison = IsPoisonous(pVictim);
 	unsigned int enemyClass = GetEnemy()->Classify();
@@ -1853,6 +1860,7 @@ void CNPC_Barnacle::SwallowPrey( void )
 		m_bSwallowingPrey = false;
 		m_hTongueTip->SetAbsVelocity( vec3_origin );
 
+//SecobMod
 #ifdef HL2_EPISODIC
 		// digest poisonous things for just a moment before being killed by them (it looks wierd if it's instant)
 		// Parentheses were probably intended around the ?: part of the expression, but putting them there now
@@ -1917,7 +1925,7 @@ void CNPC_Barnacle::RemoveRagdoll( bool bDestroyRagdoll )
 //-----------------------------------------------------------------------------
 void CNPC_Barnacle::LostPrey( bool bRemoveRagdoll )
 {
-	
+//SecobMod	
 #ifdef HL2_EPISODIC
 	m_OnRelease.Set( GetEnemy(), this, this );
 #endif
@@ -1926,6 +1934,7 @@ void CNPC_Barnacle::LostPrey( bool bRemoveRagdoll )
 
  	if ( pEnemy )
 	{
+//SecobMod
 #ifdef HL2_EPISODIC
 		PhysEnableEntityCollisions( this, pEnemy );
 #endif
@@ -1962,6 +1971,7 @@ void CNPC_Barnacle::LostPrey( bool bRemoveRagdoll )
 	RemoveRagdoll( bRemoveRagdoll );
 	m_bLiftingPrey = false;
 	m_bSwallowingPrey = false;
+//SecobMod
 #ifdef HL2_EPISODIC
 	m_bSwallowingPoison = false;
 #endif
@@ -2240,6 +2250,7 @@ void CNPC_Barnacle::WaitTillDead ( void )
 	}
 }
 
+//SecobMod
 #ifdef HL2_EPISODIC
 //=========================================================
 // Some creatures are poisonous to barnacles, and the barnacle

@@ -36,6 +36,8 @@ public:
 	void	CreateBeam( const Vector &vecSource, CBaseEntity *pDest, float flLifetime );
 	void	DissolveThink( void );
 
+	bool CanUpgradePhysCannon = false;
+
 private:
 
 	COutputEvent	m_OnDissolveWeapon;
@@ -223,7 +225,76 @@ Vector CTriggerWeaponDissolve::GetConduitPoint( CBaseEntity *pTarget )
 void CTriggerWeaponDissolve::DissolveThink( void )
 {
 	int	numWeapons = m_pWeapons.Count();
+	Vector pWeaponLocation;
 
+	#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
+	if (numWeapons > 0)
+	{
+		pWeaponLocation = m_pWeapons[1]->GetAbsOrigin();
+
+		for (int i = 0; i < numWeapons; i++)
+		{
+			CBaseCombatWeapon *pWeapon = m_pWeapons[i];
+			Vector vecConduit = GetConduitPoint(pWeapon);
+			Msg("%f %f %f\n",
+				vecConduit.x,
+				vecConduit.y,
+				vecConduit.z);
+
+			// Randomly dissolve them all
+			float flLifetime = random->RandomFloat(2.5f, 4.0f);
+			CreateBeam(vecConduit, pWeapon, flLifetime);
+			pWeapon->Dissolve(NULL, gpGlobals->curtime + (3.0f - flLifetime), false);
+
+			m_OnDissolveWeapon.FireOutput(this, this);
+
+			CPASAttenuationFilter filter(pWeapon);
+			EmitSound(filter, pWeapon->entindex(), "WeaponDissolve.Dissolve");
+
+			// Beam looping sound
+			EmitSound("WeaponDissolve.Beam");
+
+			m_pWeapons.Remove(i);
+			SetContextThink(&CTriggerWeaponDissolve::DissolveThink, gpGlobals->curtime + random->RandomFloat(0.5f, 1.5f), s_pDissolveThinkContext);
+
+			CanUpgradePhysCannon = true;
+			return;
+		}
+	}
+	else
+	{
+		if (CanUpgradePhysCannon == true)
+		{
+			//Throw in a physcannon for good measure.
+			CBaseEntity *pEntitySpawned = CreateEntityByName("weapon_physcannon");
+			CBaseCombatWeapon *pWeaponSpawned = dynamic_cast<CBaseCombatWeapon*>(pEntitySpawned);
+			if (pWeaponSpawned)
+			{
+				pWeaponSpawned->SetAbsOrigin(pWeaponLocation);
+				pWeaponSpawned->m_iPrimaryAmmoType = 1;
+				pWeaponSpawned->m_iSecondaryAmmoType = 1;
+				pWeaponSpawned->Spawn();
+			}
+
+			// All conduits send power to the weapon
+			for (int i = 0; i < m_pConduitPoints.Count(); i++)
+			{
+				CreateBeam(m_pConduitPoints[i]->GetAbsOrigin(), pWeaponSpawned, 4.0f);
+			}
+
+			PhysCannonBeginUpgrade(pWeaponSpawned);
+			m_OnChargingPhyscannon.FireOutput(this, this);
+
+			EmitSound("WeaponDissolve.Beam");
+
+			// We're done
+			m_pWeapons.Purge();
+			m_pConduitPoints.Purge();
+			SetContextThink(NULL, 0, s_pDissolveThinkContext);
+			return;
+		}
+	}
+	#else
 	// Dissolve all the items within the volume
 	for ( int i = 0; i < numWeapons; i++ )
 	{
@@ -274,6 +345,7 @@ void CTriggerWeaponDissolve::DissolveThink( void )
 		SetContextThink( &CTriggerWeaponDissolve::DissolveThink, gpGlobals->curtime + random->RandomFloat( 0.5f, 1.5f ), s_pDissolveThinkContext );
 		return;
 	}
+	#endif //SecobMod__ALLOW_SUPER_GRAVITY_GUN
 
 	SetContextThink( &CTriggerWeaponDissolve::DissolveThink, gpGlobals->curtime + 0.1f, s_pDissolveThinkContext );
 }
@@ -368,6 +440,18 @@ void CTriggerWeaponStrip::EndTouch(CBaseEntity *pOther)
 		if ( pCharacter )
 		{
 			pCharacter->SetPreventWeaponPickup( false );
+			
+			//Throw in a physcannon for good measure.
+			CBaseEntity *pEntitySpawned = CreateEntityByName("weapon_physcannon");
+			CBaseCombatWeapon *pWeaponSpawned = dynamic_cast<CBaseCombatWeapon*>(pEntitySpawned);
+			if (pWeaponSpawned)
+			{
+				pWeaponSpawned->SetAbsOrigin(pCharacter->GetAbsOrigin());
+				pWeaponSpawned->m_iPrimaryAmmoType = 1;
+				pWeaponSpawned->m_iSecondaryAmmoType = 1;
+				pWeaponSpawned->Spawn();
+				//Cast to pWeapon Spawned as a PhysCannon and enable the megaphyscannon stuff. As is we just get a normal physgun.
+			}
 		}
 	}
 
@@ -456,7 +540,9 @@ void CTriggerPhysicsTrap::Touch( CBaseEntity *pOther )
 	if ( !pAnim )
 		return;
 
-#ifdef HL2_DLL
+//SecobMod.
+//#ifdef HL2_DLL
+#ifdef SecobMod__ALLOW_SUPER_GRAVITY_GUN
 	// HACK: Upgrade the physcannon
 	if ( FClassnameIs( pAnim, "weapon_physcannon" ) )
 	{

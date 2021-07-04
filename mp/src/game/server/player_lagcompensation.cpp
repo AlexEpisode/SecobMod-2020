@@ -218,9 +218,10 @@ class CLagCompensationManager : public CAutoGameSystemPerFrame, public ILagCompe
 public:
 	CLagCompensationManager( char const *name ) : CAutoGameSystemPerFrame( name ), m_flTeleportDistanceSqr( 64 *64 )
 	{
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	m_bNeedsAIUpdate = true; 
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+		m_isCurrentlyDoingCompensation = false;
+		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+		m_bNeedsAIUpdate = true; 
+		#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	}
 
 	// IServerSystem stuff
@@ -250,6 +251,7 @@ public:
 	} 
 #endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
+	bool			IsCurrentlyDoingLagCompensation() const OVERRIDE { return m_isCurrentlyDoingCompensation; }
 
 private:
 	void			BacktrackPlayer( CBasePlayer *player, float flTargetTime );
@@ -302,6 +304,7 @@ void UpdateAIIndexes();
 	bool					m_bNeedsAIUpdate; 
 #endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
+	bool					m_isCurrentlyDoingCompensation;	// Sentinel to prevent calling StartLagCompensation a second time before a Finish.
 };
 
 static CLagCompensationManager g_LagCompensationManager( "CLagCompensationManager" );
@@ -533,6 +536,8 @@ void CLagCompensationManager::UpdateAIIndexes()
 // Called during player movement to set up/restore after lag compensation
 void CLagCompensationManager::StartLagCompensation( CBasePlayer *player, CUserCmd *cmd )
 {
+	Assert( !m_isCurrentlyDoingCompensation );
+
 	//DONT LAG COMP AGAIN THIS FRAME IF THERES ALREADY ONE IN PROGRESS
 	//IF YOU'RE HITTING THIS THEN IT MEANS THERES A CODE BUG
 	if ( m_pCurrentPlayer )
@@ -578,6 +583,8 @@ void CLagCompensationManager::StartLagCompensation( CBasePlayer *player, CUserCm
 	Q_memset( m_EntityRestoreData, 0, sizeof( m_EntityRestoreData ) ); 
 	Q_memset( m_EntityChangeData, 0, sizeof( m_EntityChangeData ) ); 
 #endif //SecobMod__Enable_Fixed_Multiplayer_AI
+
+	m_isCurrentlyDoingCompensation = true;
 
 	// Get true latency
 
@@ -1361,7 +1368,10 @@ void CLagCompensationManager::FinishLagCompensation( CBasePlayer *player )
 	m_pCurrentPlayer = NULL;
 
 	if ( !m_bNeedToRestore )
+	{
+		m_isCurrentlyDoingCompensation = false;
 		return; // no player was changed at all
+	}
 
 	// Iterate all active players
 	for ( int i = 1; i <= gpGlobals->maxClients; i++ )
@@ -1397,12 +1407,12 @@ void CLagCompensationManager::FinishLagCompensation( CBasePlayer *player )
 				// Restore it
 				pPlayer->SetSize( restore->m_vecMinsPreScaled, restore->m_vecMaxsPreScaled );
 			}
-#ifdef STAGING_ONLY
+			#ifdef STAGING_ONLY
 			else
 			{
 				Warning( "Should we really not restore the size?\n" );
 			}
-#endif
+			#endif
 		}
 
 		if ( restore->m_fFlags & LC_ANGLES_CHANGED )
@@ -1453,68 +1463,68 @@ void CLagCompensationManager::FinishLagCompensation( CBasePlayer *player )
 		if ( restoreSimulationTime )
 		{
 			pPlayer->SetSimulationTime( restore->m_flSimulationTime );
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 		}
 	}
 	
+	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
 	// also iterate all monsters
 	CAI_BaseNPC **ppAIs = g_AI_Manager.AccessAIs();
 	int nAIs = g_AI_Manager.NumAIs();
 
-	for ( int i = 0; i < nAIs; i++ )
+	for (int i = 0; i < nAIs; i++)
 	{
 		CAI_BaseNPC *pNPC = ppAIs[i];
-		
-		if ( !m_RestoreEntity.Get( i ) )
+
+		if (!m_RestoreEntity.Get(i))
 		{
 			// entity wasn't changed by lag compensation
 			continue;
 		}
 
-		LagRecord *restore = &m_EntityRestoreData[ i ];
-		LagRecord *change  = &m_EntityChangeData[ i ];
+		LagRecord *restore = &m_EntityRestoreData[i];
+		LagRecord *change = &m_EntityChangeData[i];
 
 		bool restoreSimulationTime = false;
 
-		if ( restore->m_fFlags & LC_SIZE_CHANGED )
+		if (restore->m_fFlags & LC_SIZE_CHANGED)
 		{
 			restoreSimulationTime = true;
-	
+
 			// see if simulation made any changes, if no, then do the restore, otherwise,
 			//  leave new values in
-			if ( pNPC->WorldAlignMins() == change->m_vecMinsPreScaled && 
-				 pNPC->WorldAlignMaxs() == change->m_vecMaxsPreScaled )
+			if (pNPC->WorldAlignMins() == change->m_vecMinsPreScaled &&
+				pNPC->WorldAlignMaxs() == change->m_vecMaxsPreScaled)
 			{
 				// Restore it
-				pNPC->SetSize( restore->m_vecMinsPreScaled, restore->m_vecMaxsPreScaled );
+				pNPC->SetSize(restore->m_vecMinsPreScaled, restore->m_vecMaxsPreScaled);
 			}
 		}
 
-		if ( restore->m_fFlags & LC_ANGLES_CHANGED )
-		{		   
+		if (restore->m_fFlags & LC_ANGLES_CHANGED)
+		{
 			restoreSimulationTime = true;
 
-			if ( pNPC->GetLocalAngles() == change->m_vecAngles )
+			if (pNPC->GetLocalAngles() == change->m_vecAngles)
 			{
-				pNPC->SetLocalAngles( restore->m_vecAngles );
+				pNPC->SetLocalAngles(restore->m_vecAngles);
 			}
 		}
 
-		if ( restore->m_fFlags & LC_ORIGIN_CHANGED )
+		if (restore->m_fFlags & LC_ORIGIN_CHANGED)
 		{
 			restoreSimulationTime = true;
 
 			// Okay, let's see if we can do something reasonable with the change
 			Vector delta = pNPC->GetLocalOrigin() - change->m_vecOrigin;
-			
+
 			// If it moved really far, just leave the player in the new spot!!!
-			if ( delta.LengthSqr() < LAG_COMPENSATION_EPS_SQR )
+			if (delta.LengthSqr() < LAG_COMPENSATION_EPS_SQR)
 			{
-				RestoreEntityTo( pNPC, restore->m_vecOrigin + delta );
+				RestoreEntityTo(pNPC, restore->m_vecOrigin + delta);
 			}
 		}
 
-		if( restore->m_fFlags & LC_ANIMATION_CHANGED )
+		if (restore->m_fFlags & LC_ANIMATION_CHANGED)
 		{
 			restoreSimulationTime = true;
 
@@ -1522,10 +1532,10 @@ void CLagCompensationManager::FinishLagCompensation( CBasePlayer *player )
 			pNPC->SetCycle(restore->m_masterCycle);
 
 			int layerCount = pNPC->GetNumAnimOverlays();
-			for( int layerIndex = 0; layerIndex < layerCount; ++layerIndex )
+			for (int layerIndex = 0; layerIndex < layerCount; ++layerIndex)
 			{
 				CAnimationLayer *currentLayer = pNPC->GetAnimOverlay(layerIndex);
-				if( currentLayer )
+				if (currentLayer)
 				{
 					currentLayer->m_flCycle = restore->m_layerRecords[layerIndex].m_cycle;
 					currentLayer->m_nOrder = restore->m_layerRecords[layerIndex].m_order;
@@ -1535,12 +1545,13 @@ void CLagCompensationManager::FinishLagCompensation( CBasePlayer *player )
 			}
 		}
 
-		if ( restoreSimulationTime )
+		if (restoreSimulationTime)
 		{
-			pNPC->SetSimulationTime( restore->m_flSimulationTime );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+			pNPC->SetSimulationTime(restore->m_flSimulationTime);
 		}
+	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	}
+	m_isCurrentlyDoingCompensation = false;
 }
 
 

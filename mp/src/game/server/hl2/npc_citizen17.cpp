@@ -143,23 +143,23 @@ struct citizen_expression_list_t
 // Scared
 citizen_expression_list_t ScaredExpressions[STATES_WITH_EXPRESSIONS] =
 {
-	{ "scenes/Expressions/citizen_scared_idle_01.vcd" },
-	{ "scenes/Expressions/citizen_scared_alert_01.vcd" },
-	{ "scenes/Expressions/citizen_scared_combat_01.vcd" },
+	{ { "scenes/Expressions/citizen_scared_idle_01.vcd" } },
+	{ { "scenes/Expressions/citizen_scared_alert_01.vcd" } },
+	{ { "scenes/Expressions/citizen_scared_combat_01.vcd" } },
 };
 // Normal
 citizen_expression_list_t NormalExpressions[STATES_WITH_EXPRESSIONS] =
 {
-	{ "scenes/Expressions/citizen_normal_idle_01.vcd" },
-	{ "scenes/Expressions/citizen_normal_alert_01.vcd" },
-	{ "scenes/Expressions/citizen_normal_combat_01.vcd" },
+	{ { "scenes/Expressions/citizen_normal_idle_01.vcd" } },
+	{ { "scenes/Expressions/citizen_normal_alert_01.vcd" } },
+	{ { "scenes/Expressions/citizen_normal_combat_01.vcd" } },
 };
 // Angry
 citizen_expression_list_t AngryExpressions[STATES_WITH_EXPRESSIONS] =
 {
-	{ "scenes/Expressions/citizen_angry_idle_01.vcd" },
-	{ "scenes/Expressions/citizen_angry_alert_01.vcd" },
-	{ "scenes/Expressions/citizen_angry_combat_01.vcd" },
+	{ { "scenes/Expressions/citizen_angry_idle_01.vcd" } },
+	{ { "scenes/Expressions/citizen_angry_alert_01.vcd" } },
+	{ { "scenes/Expressions/citizen_angry_combat_01.vcd" } },
 };
 
 //-----------------------------------------------------------------------------
@@ -195,9 +195,8 @@ public:
 
 	void InputOutsideTransition( inputdata_t &inputdata )
 	{
-	//SecobMod__MiscFixes
-	//	if ( !AI_IsSinglePlayer() ) 
-	//		return; 
+		if ( !AI_IsSinglePlayer() )
+			return;
 
 		m_bNotInTransition = true;
 
@@ -213,12 +212,8 @@ public:
 					bool bHadGag = pAllyNpc->HasSpawnFlags(SF_NPC_GAG);
 
 					pAllyNpc->AddSpawnFlags(SF_NPC_GAG);
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-					pAllyNpc->TargetOrder( UTIL_GetNearestPlayer(pAllyNpc->GetAbsOrigin()), &pAllyNpc, 1 ); 
-#else
-pAllyNpc->TargetOrder( UTIL_GetLocalPlayer(), &pAllyNpc, 1 );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-						if ( !bHadGag )
+					pAllyNpc->TargetOrder( UTIL_GetLocalPlayer(), &pAllyNpc, 1 );
+					if ( !bHadGag )
 						pAllyNpc->RemoveSpawnFlags(SF_NPC_GAG);
 				}
 			}
@@ -358,6 +353,7 @@ BEGIN_DATADESC( CNPC_Citizen )
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SetAmmoResupplierOff",	InputSetAmmoResupplierOff ),
 	DEFINE_INPUTFUNC( FIELD_VOID,	"SpeakIdleResponse", InputSpeakIdleResponse ),
 
+//SecobMod.
 #ifdef HL2_EPISODIC
 	DEFINE_INPUTFUNC( FIELD_VOID,   "ThrowHealthKit", InputForceHealthKitToss ),
 #endif
@@ -553,16 +549,9 @@ void CNPC_Citizen::PostNPCInit()
 	}
 	else
 	{
-		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-			if ( ( m_spawnflags & SF_CITIZEN_FOLLOW ) ) 
-			{
-			m_FollowBehavior.SetFollowTarget( UTIL_GetNearestPlayer(GetAbsOrigin()) );
-		#else
-			if ( ( m_spawnflags & SF_CITIZEN_FOLLOW ) && AI_IsSinglePlayer() )
-			{
+		if ( ( m_spawnflags & SF_CITIZEN_FOLLOW ) && AI_IsSinglePlayer() )
+		{
 			m_FollowBehavior.SetFollowTarget( UTIL_GetLocalPlayer() );
-		#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-
 			m_FollowBehavior.SetParameters( AIF_SIMPLE );
 		}
 	}
@@ -909,12 +898,7 @@ void CNPC_Citizen::GatherConditions()
 	if( IsInPlayerSquad() && hl2_episodic.GetBool() )
 	{
 		// Leave the player squad if someone has made me neutral to player.
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-		if( IRelationType(UTIL_GetNearestPlayer(GetAbsOrigin())) == D_NU ) 
-#else
-if( IRelationType(UTIL_GetLocalPlayer()) == D_NU )
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI		
-
+		if( IRelationType(UTIL_GetLocalPlayer()) == D_NU )
 		{
 			RemoveFromPlayerSquad();
 		}
@@ -947,12 +931,7 @@ if( IRelationType(UTIL_GetLocalPlayer()) == D_NU )
 	// assume the player is 'staring' and wants health.
 	if( CanHeal() )
 	{
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-		CBasePlayer *pPlayer = UTIL_GetNearestVisiblePlayer(this);
-#else
-CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-
+		CBasePlayer *pPlayer = AI_GetSinglePlayer();
 
 		if ( !pPlayer )
 		{
@@ -1005,10 +984,8 @@ CBasePlayer *pPlayer = AI_GetSinglePlayer();
 //-----------------------------------------------------------------------------
 void CNPC_Citizen::PredictPlayerPush()
 {
-#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 	if ( !AI_IsSinglePlayer() )
 		return;
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	if ( HasCondition( COND_CIT_PLAYERHEALREQUEST ) )
 		return;
@@ -1017,12 +994,7 @@ void CNPC_Citizen::PredictPlayerPush()
 
 	BaseClass::PredictPlayerPush();
 
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin());
-#else
-CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-
+	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	if ( !bHadPlayerPush && HasCondition( COND_PLAYER_PUSHING ) && 
 		 pPlayer->FInViewCone( this ) && CanHeal() )
 	{
@@ -1238,6 +1210,7 @@ int CNPC_Citizen::SelectSchedulePriorityAction()
 int CNPC_Citizen::SelectScheduleHeal()
 {
 	// episodic medics may toss the healthkits rather than poke you with them
+//SecobMod.
 #ifdef HL2_EPISODIC
 
 	if ( CanHeal() )
@@ -1468,11 +1441,7 @@ bool CNPC_Citizen::ShouldDeferToFollowBehavior()
 //-----------------------------------------------------------------------------
 int CNPC_Citizen::TranslateSchedule( int scheduleType ) 
 {
-	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-		CBasePlayer *pLocalPlayer = UTIL_GetNearestVisiblePlayer(this); 
-	#else
-		CBasePlayer *pLocalPlayer = AI_GetSinglePlayer();
-	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+	CBasePlayer *pLocalPlayer = AI_GetSinglePlayer();
 
 	switch( scheduleType )
 	{
@@ -1486,9 +1455,7 @@ int CNPC_Citizen::TranslateSchedule( int scheduleType )
 
 			if( flDist < 50 * 12 )
 			{
-#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
-			AddSpawnFlags( SF_CITIZEN_NOT_COMMANDABLE );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+				AddSpawnFlags( SF_CITIZEN_NOT_COMMANDABLE );
 				return SCHED_CITIZEN_MOURN_PLAYER;
 			}
 		}
@@ -1527,18 +1494,10 @@ int CNPC_Citizen::TranslateSchedule( int scheduleType )
 					return SCHED_STANDOFF;
 				}
 			}
-			#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-				else if ( GetEnemy() ) 
-				{
-				CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetEnemy()->GetAbsOrigin()); 
-				if ( pPlayer && ( ( GetEnemy()->GetAbsOrigin() -  
-			#else
-				else
-				{
+			else
+			{
 				CBasePlayer *pPlayer = AI_GetSinglePlayer();
 				if ( pPlayer && GetEnemy() && ( ( GetEnemy()->GetAbsOrigin() - 
-			#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-
 					pPlayer->GetAbsOrigin() ).LengthSqr() < RPG_SAFE_DISTANCE * RPG_SAFE_DISTANCE ) )
 				{
 					// Don't fire our RPG at an enemy too close to the player
@@ -1622,6 +1581,7 @@ void CNPC_Citizen::StartTask( const Task_t *pTask )
 		break;
 		
 	case TASK_CIT_HEAL:
+//SecobMod.
 #ifdef HL2_EPISODIC
 	case TASK_CIT_HEAL_TOSS:
 #endif
@@ -1748,6 +1708,7 @@ void CNPC_Citizen::RunTask( const Task_t *pTask )
 			break;
 
 
+//SecobMod.
 #ifdef HL2_EPISODIC
 		case TASK_CIT_HEAL_TOSS:
 			if ( IsSequenceFinished() )
@@ -1810,13 +1771,7 @@ void CNPC_Citizen::RunTask( const Task_t *pTask )
 					}
 
 					Vector vecEnemyPos = GetEnemy()->BodyTarget(GetAbsOrigin(), false);
-					
-					#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-						CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetEnemy()->GetAbsOrigin()); 
-					#else
-						CBasePlayer *pPlayer = AI_GetSinglePlayer();
-					#endif //SecobMod__Enable_Fixed_Multiplayer_AI	
-
+					CBasePlayer *pPlayer = AI_GetSinglePlayer();
 					if ( pPlayer && ( ( vecEnemyPos - pPlayer->GetAbsOrigin() ).LengthSqr() < RPG_SAFE_DISTANCE * RPG_SAFE_DISTANCE ) )
 					{
 						m_bRPGAvoidPlayer = true;
@@ -1926,6 +1881,7 @@ void CNPC_Citizen::HandleAnimEvent( animevent_t *pEvent )
 	else if ( pEvent->event == AE_CITIZEN_HEAL )
 	{
 		// Heal my target (if within range)
+		//SecobMod.
 #ifdef HL2_EPISODIC
 		if ( USE_EXPERIMENTAL_MEDIC_CODE() && IsMedic() )
 		{
@@ -2367,10 +2323,8 @@ bool CNPC_Citizen::IsPlayerAlly( CBasePlayer *pPlayer )
 //-----------------------------------------------------------------------------
 bool CNPC_Citizen::CanJoinPlayerSquad()
 {
-	#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 	if ( !AI_IsSinglePlayer() )
 		return false;
-	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	if ( m_NPCState == NPC_STATE_SCRIPT || m_NPCState == NPC_STATE_PRONE )
 		return false;
@@ -2385,13 +2339,7 @@ bool CNPC_Citizen::CanJoinPlayerSquad()
 	if ( !CanBeUsedAsAFriend() )
 		return false;
 
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	if ( IRelationType( UTIL_GetNearestPlayer(GetAbsOrigin()) ) != D_LI ) 
-#else
-if ( IRelationType( UTIL_GetLocalPlayer() ) != D_LI )
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI	
-
-	return false;
+	if ( IRelationType( UTIL_GetLocalPlayer() ) != D_LI )
 		return false;
 
 	return true;
@@ -2418,17 +2366,10 @@ bool CNPC_Citizen::HaveCommandGoal() const
 //-----------------------------------------------------------------------------
 bool CNPC_Citizen::IsCommandMoving()
 {
-		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-			if ( IsInPlayerSquad() ) 
-			{
-			if ( m_FollowBehavior.GetFollowTarget() == UTIL_GetNearestPlayer(GetAbsOrigin()) || 
-		#else
-			if ( AI_IsSinglePlayer() && IsInPlayerSquad() )
-			{
-			if ( m_FollowBehavior.GetFollowTarget() == UTIL_GetLocalPlayer() ||
-		#endif //SecobMod__Enable_Fixed_Multiplayer_AI			 
-
-		IsFollowingCommandPoint() )
+	if ( AI_IsSinglePlayer() && IsInPlayerSquad() )
+	{
+		if ( m_FollowBehavior.GetFollowTarget() == UTIL_GetLocalPlayer() ||
+			 IsFollowingCommandPoint() )
 		{
 			return ( m_FollowBehavior.IsMovingToFollowTarget() );
 		}
@@ -2440,18 +2381,11 @@ bool CNPC_Citizen::IsCommandMoving()
 //-----------------------------------------------------------------------------
 bool CNPC_Citizen::ShouldAutoSummon()
 {
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	if ( !IsFollowingCommandPoint() || !IsInPlayerSquad() ) 
-		return false;
-
-	CHL2_Player *pPlayer = (CHL2_Player *)UTIL_GetNearestPlayer(GetAbsOrigin());
-#else
-if ( !AI_IsSinglePlayer() || !IsFollowingCommandPoint() || !IsInPlayerSquad() )
+	if ( !AI_IsSinglePlayer() || !IsFollowingCommandPoint() || !IsInPlayerSquad() )
 		return false;
 
 	CHL2_Player *pPlayer = (CHL2_Player *)UTIL_GetLocalPlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-
+	
 	float distMovedSq = ( pPlayer->GetAbsOrigin() - m_vAutoSummonAnchor ).LengthSqr();
 	float moveTolerance = player_squad_autosummon_move_tolerance.GetFloat() * 12;
 	const Vector &vCommandGoal = GetCommandGoal();
@@ -2578,13 +2512,8 @@ bool CNPC_Citizen::SpeakCommandResponse( AIConcept_t concept, const char *modifi
 						   CFmtStr( "numselected:%d,"
 									"useradio:%d%s",
 									( GetSquad() ) ? GetSquad()->NumMembers() : 1,
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-									ShouldSpeakRadio( UTIL_GetNearestPlayer(GetAbsOrigin()) ), 
-#else
-ShouldSpeakRadio( AI_GetSinglePlayer() ),
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-								
-	( modifiers ) ? CFmtStr(",%s", modifiers).operator const char *() : "" ) );
+									ShouldSpeakRadio( AI_GetSinglePlayer() ),
+									( modifiers ) ? CFmtStr(",%s", modifiers).operator const char *() : "" ) );
 }
 
 //-----------------------------------------------------------------------------
@@ -2626,10 +2555,8 @@ bool CNPC_Citizen::TargetOrder( CBaseEntity *pTarget, CAI_BaseNPC **Allies, int 
 //-----------------------------------------------------------------------------
 void CNPC_Citizen::MoveOrder( const Vector &vecDest, CAI_BaseNPC **Allies, int numAllies )
 {
-#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
-		if ( !AI_IsSinglePlayer() ) 
-		return; 
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+	if ( !AI_IsSinglePlayer() )
+		return;
 
 	if( hl2_episodic.GetBool() && m_iszDenyCommandConcept != NULL_STRING )
 	{
@@ -2637,12 +2564,7 @@ void CNPC_Citizen::MoveOrder( const Vector &vecDest, CAI_BaseNPC **Allies, int n
 		return;
 	}
 
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-CHL2_Player *pPlayer = (CHL2_Player *)UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-CHL2_Player *pPlayer = (CHL2_Player *)UTIL_GetLocalPlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-
+	CHL2_Player *pPlayer = (CHL2_Player *)UTIL_GetLocalPlayer();
 
 	m_AutoSummonTimer.Set( player_squad_autosummon_time.GetFloat() );
 	m_vAutoSummonAnchor = pPlayer->GetAbsOrigin();
@@ -2726,22 +2648,13 @@ void CNPC_Citizen::CommanderUse( CBaseEntity *pActivator, CBaseEntity *pCaller, 
 
 	// Under these conditions, citizens will refuse to go with the player.
 	// Robin: NPCs should always respond to +USE even if someone else has the semaphore.
-
-	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-		if ( !CanJoinPlayerSquad() )
-	#else
-		if ( !AI_IsSinglePlayer() || !CanJoinPlayerSquad() )
-	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+	if ( !AI_IsSinglePlayer() || !CanJoinPlayerSquad() )
 	{
 		SimpleUse( pActivator, pCaller, useType, value );
 		return;
 	}
 	
-	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-		if ( pActivator == UTIL_GetNearestPlayer(GetAbsOrigin()) )
-	#else
-		if ( pActivator == UTIL_GetLocalPlayer() )
-	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+	if ( pActivator == UTIL_GetLocalPlayer() )
 	{
 		// Don't say hi after you've been addressed by the player
 		SetSpokeConcept( TLK_HELLO, NULL );	
@@ -2844,10 +2757,8 @@ void CNPC_Citizen::RemoveFromPlayerSquad()
 //-----------------------------------------------------------------------------
 void CNPC_Citizen::TogglePlayerSquadState()
 {
-	#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
-		if ( !AI_IsSinglePlayer() )
+	if ( !AI_IsSinglePlayer() )
 		return;
-	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	if ( !IsInPlayerSquad() )
 	{
@@ -2857,13 +2768,7 @@ void CNPC_Citizen::TogglePlayerSquadState()
 		{
 			SpeakCommandResponse( TLK_COMMANDED );
 		}
-
-		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-			else if ( m_FollowBehavior.GetFollowTarget() == UTIL_GetNearestPlayer(GetAbsOrigin()) ) 
-		#else
-			else if ( m_FollowBehavior.GetFollowTarget() == UTIL_GetLocalPlayer() )
-		#endif //SecobMod__Enable_Fixed_Multiplayer_AI	
-
+		else if ( m_FollowBehavior.GetFollowTarget() == UTIL_GetLocalPlayer() )
 		{
 			SpeakCommandResponse( TLK_STARTFOLLOW );
 		}
@@ -2888,16 +2793,11 @@ struct SquadCandidate_t
 
 void CNPC_Citizen::UpdatePlayerSquad()
 {
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-	if ( pPlayer && ( pPlayer->GetAbsOrigin().AsVector2D() - GetAbsOrigin().AsVector2D() ).LengthSqr() < Square(20*12) ) 
-#else
 	if ( !AI_IsSinglePlayer() )
 		return;
 
 	CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 	if ( ( pPlayer->GetAbsOrigin().AsVector2D() - GetAbsOrigin().AsVector2D() ).LengthSqr() < Square(20*12) )
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 		m_flTimeLastCloseToPlayer = gpGlobals->curtime;
 
 	if ( !gm_PlayerSquadEvaluateTimer.Expired() )
@@ -3175,11 +3075,8 @@ int CNPC_Citizen::PlayerSquadCandidateSortFunc( const SquadCandidate_t *pLeft, c
 //-----------------------------------------------------------------------------
 void CNPC_Citizen::FixupPlayerSquad()
 {
-
-#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
-if ( !AI_IsSinglePlayer() )
+	if ( !AI_IsSinglePlayer() )
 		return;
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	m_flTimeJoinedPlayerSquad = gpGlobals->curtime;
 	m_bWasInPlayerSquad = true;
@@ -3248,23 +3145,16 @@ if ( !AI_IsSinglePlayer() )
 //-----------------------------------------------------------------------------
 void CNPC_Citizen::ClearFollowTarget()
 {
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-	m_FollowBehavior.SetFollowTarget( UTIL_GetNearestPlayer(GetAbsOrigin()) ); 
-#else
-m_FollowBehavior.SetFollowTarget( NULL );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI	
-
-m_FollowBehavior.SetParameters( AIF_SIMPLE );
+	m_FollowBehavior.SetFollowTarget( NULL );
+	m_FollowBehavior.SetParameters( AIF_SIMPLE );
 }
 
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
 void CNPC_Citizen::UpdateFollowCommandPoint()
 {
-#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
-if ( !AI_IsSinglePlayer() )
+	if ( !AI_IsSinglePlayer() )
 		return;
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 	if ( IsInPlayerSquad() )
 	{
@@ -3295,19 +3185,10 @@ if ( !AI_IsSinglePlayer() )
 		{
 			if ( IsFollowingCommandPoint() )
 				ClearFollowTarget();
-
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-			CBasePlayer *pNearest = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-			if ( m_FollowBehavior.GetFollowTarget() != pNearest ) 
-			{
-				DevMsg( "Switching to following new nearest player\n" );
-				m_FollowBehavior.SetFollowTarget( pNearest );
-#else
-if ( m_FollowBehavior.GetFollowTarget() != UTIL_GetLocalPlayer() )
+			if ( m_FollowBehavior.GetFollowTarget() != UTIL_GetLocalPlayer() )
 			{
 				DevMsg( "Expected to be following player, but not\n" );
 				m_FollowBehavior.SetFollowTarget( UTIL_GetLocalPlayer() );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 				m_FollowBehavior.SetParameters( AIF_SIMPLE );
 			}
 		}
@@ -3352,10 +3233,8 @@ int __cdecl SquadSortFunc( const SquadMemberInfo_t *pLeft, const SquadMemberInfo
 
 CAI_BaseNPC *CNPC_Citizen::GetSquadCommandRepresentative()
 {
-#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 	if ( !AI_IsSinglePlayer() )
-	return NULL;
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+		return NULL;
 
 	if ( IsInPlayerSquad() )
 	{
@@ -3368,12 +3247,7 @@ CAI_BaseNPC *CNPC_Citizen::GetSquadCommandRepresentative()
 			hCurrent = NULL;
 
 			CUtlVectorFixed<SquadMemberInfo_t, MAX_SQUAD_MEMBERS> candidates;
-
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+			CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
 
 			if ( pPlayer )
 			{
@@ -3783,6 +3657,7 @@ void CNPC_Citizen::Heal()
 
 
 
+//SecobMod.
 #ifdef HL2_EPISODIC
 //-----------------------------------------------------------------------------
 // Like Heal(), but tosses a healthkit in front of the player rather than just juicing him up.
@@ -3859,11 +3734,7 @@ void	CNPC_Citizen::TossHealthKit(CBaseCombatCharacter *pThrowAt, const Vector &o
 //-----------------------------------------------------------------------------
 void	CNPC_Citizen::InputForceHealthKitToss( inputdata_t &inputdata )
 {
-	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-		TossHealthKit( UTIL_GetNearestPlayer(GetAbsOrigin()), Vector(48.0f, 0.0f, 0.0f)  ); 
-	#else
-		TossHealthKit( UTIL_GetLocalPlayer(), Vector(48.0f, 0.0f, 0.0f)  );
-	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+	TossHealthKit( UTIL_GetLocalPlayer(), Vector(48.0f, 0.0f, 0.0f)  );
 }
 
 #endif
@@ -3886,13 +3757,7 @@ bool CNPC_Citizen::ShouldLookForHealthItem()
 		return false;
 
 	// Player is hurt, don't steal his health.
-	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-		CBasePlayer *pNearest = UTIL_GetNearestVisiblePlayer(this); 
-		if( pNearest && pNearest->GetHealth() <= pNearest->GetMaxHealth() * 0.75f ) 
-	#else
-		if( AI_IsSinglePlayer() && UTIL_GetLocalPlayer()->GetHealth() <= UTIL_GetLocalPlayer()->GetHealth() * 0.75f )
-	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-
+	if( AI_IsSinglePlayer() && UTIL_GetLocalPlayer()->GetHealth() <= UTIL_GetLocalPlayer()->GetHealth() * 0.75f )
 		return false;
 
 	// Wait till you're standing still.
@@ -4017,6 +3882,7 @@ AI_BEGIN_CUSTOM_NPC( npc_citizen, CNPC_Citizen )
 	DECLARE_TASK( TASK_CIT_SIT_ON_TRAIN )
 	DECLARE_TASK( TASK_CIT_LEAVE_TRAIN )
 	DECLARE_TASK( TASK_CIT_SPEAK_MOURNING )
+	//SecobMod.
 #ifdef HL2_EPISODIC
 	DECLARE_TASK( TASK_CIT_HEAL_TOSS )
 #endif
@@ -4055,6 +3921,7 @@ AI_BEGIN_CUSTOM_NPC( npc_citizen, CNPC_Citizen )
 		"	Interrupts"
 	)
 
+	//SecobMod.
 #ifdef HL2_EPISODIC
 	//=========================================================
 	// > SCHED_CITIZEN_HEAL_TOSS
@@ -4276,9 +4143,7 @@ void CCitizenResponseSystem::InputResponseVitalNPC( inputdata_t &inputdata )
 void CCitizenResponseSystem::ResponseThink()
 {
 	bool bStayActive = false;
-#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 	if ( AI_IsSinglePlayer() )
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 	{
 		for ( int i = 0; i < MAX_CITIZEN_RESPONSES; i++ )
 		{
@@ -4295,18 +4160,10 @@ void CCitizenResponseSystem::ResponseThink()
 					float flNearestDist = (CITIZEN_RESPONSE_DISTANCE * CITIZEN_RESPONSE_DISTANCE);
 					CBaseEntity *pNearestCitizen = NULL;
 					CBaseEntity *pCitizen = NULL;
-
-				#ifndef SecobMod__Enable_Fixed_Multiplayer_AI
 					CBasePlayer *pPlayer = UTIL_GetLocalPlayer();
-				#endif //SecobMod__Enable_Fixed_Multiplayer_AI
-
 					while ( (pCitizen = gEntList.FindEntityByClassname( pCitizen, "npc_citizen" ) ) != NULL)
 					{
-				#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-					CBasePlayer *pPlayer = UTIL_GetNearestPlayer(pCitizen->GetAbsOrigin()); 
-				#endif //SecobMod__Enable_Fixed_Multiplayer_AI	
-
-					float flDistToPlayer = (pPlayer->WorldSpaceCenter() - pCitizen->WorldSpaceCenter()).LengthSqr();
+						float flDistToPlayer = (pPlayer->WorldSpaceCenter() - pCitizen->WorldSpaceCenter()).LengthSqr();
 						if ( flDistToPlayer < flNearestDist )
 						{
 							flNearestDist = flDistToPlayer;
@@ -4348,8 +4205,6 @@ void CNPC_Citizen::AddInsignia()
 
 void CNPC_Citizen::RemoveInsignia()
 {
-	// This is crap right now.
-	CBaseEntity *FirstEnt();
 	CBaseEntity *pEntity = gEntList.FirstEnt();
 
 	while( pEntity )

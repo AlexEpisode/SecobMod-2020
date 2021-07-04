@@ -952,6 +952,7 @@ int CNPC_BaseZombie::OnTakeDamage_Alive( const CTakeDamageInfo &inputInfo )
 //-----------------------------------------------------------------------------
 void CNPC_BaseZombie::MakeAISpookySound( float volume, float duration )
 {
+	//SecobMod
 	#ifdef HL2_EPISODIC
 	if ( HL2MPRules()->IsAlyxInDarknessMode() )
 	{
@@ -1059,6 +1060,7 @@ bool CNPC_BaseZombie::ShouldIgniteZombieGib( void )
 #ifdef HL2_EPISODIC
 	// If we're in darkness mode, don't ignite giblets, because we don't want to
 	// pay the perf cost of multiple dynamic lights per giblet.
+	//SecobMod
 	return ( IsOnFire() && !HL2MPRules()->IsAlyxInDarknessMode() );
 #else
 	return IsOnFire();
@@ -1211,6 +1213,7 @@ void CNPC_BaseZombie::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize
 	BaseClass::Ignite( flFlameLifetime, bNPCOnly, flSize, bCalledByLevelDesigner );
 
 #ifdef HL2_EPISODIC
+	//SecobMod
 	if ( HL2MPRules()->IsAlyxInDarknessMode() == true && GetEffectEntity() != NULL )
 	{
 		GetEffectEntity()->AddEffects( EF_DIMLIGHT );

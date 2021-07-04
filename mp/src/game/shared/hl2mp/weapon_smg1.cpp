@@ -61,6 +61,9 @@ public:
 
 	const WeaponProficiencyInfo_t *GetProficiencyValues();
 
+
+	
+
 #ifndef CLIENT_DLL
 	DECLARE_ACTTABLE();
 
@@ -180,8 +183,7 @@ acttable_t	CWeaponSMG1::m_acttable[] =
 	};
 
 IMPLEMENT_ACTTABLE(CWeaponSMG1);
-#endif //not clientdll.
-
+#endif
 
 //=========================================================
 CWeaponSMG1::CWeaponSMG1( )

@@ -5339,6 +5339,7 @@ Vector CGrenadeHelicopter::PhysGunLaunchVelocity( const Vector &forward, float f
 //------------------------------------------------------------------------------
 float CGrenadeHelicopter::GetBombLifetime()
 {
+//SecobMod
 #ifdef HL2_EPISODIC
 	return m_flLifetime;
 #else

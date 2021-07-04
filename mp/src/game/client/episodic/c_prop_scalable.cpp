@@ -81,6 +81,7 @@ void RecvProxy_ScaleZz( const CRecvProxyData *pData, void *pStruct, void *pOut )
 }
 
 IMPLEMENT_CLIENTCLASS_DT( C_PropScalable, DT_PropScalable, CPropScalable )
+	//SecobMod fixes.
 	RecvPropFloat( RECVINFO( m_flScaleX ), 0, RecvProxy_ScaleXx ),
 	RecvPropFloat( RECVINFO( m_flScaleY ), 0, RecvProxy_ScaleYy ),
 	RecvPropFloat( RECVINFO( m_flScaleZ ), 0, RecvProxy_ScaleZz ),

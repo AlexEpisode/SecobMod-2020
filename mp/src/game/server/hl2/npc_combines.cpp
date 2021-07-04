@@ -79,6 +79,7 @@ void CNPC_CombineS::Spawn( void )
 
 	BaseClass::Spawn();
 
+//SecobMod
 #ifdef HL2_EPISODIC
 	if (m_iUseMarch && !HasSpawnFlags(SF_NPC_START_EFFICIENT))
 	{
@@ -242,6 +243,7 @@ void CNPC_CombineS::OnChangeActivity( Activity eNewActivity )
 
 	BaseClass::OnChangeActivity( eNewActivity );
 
+//SecobMod
 #ifdef HL2_EPISODIC
 	// Give each trooper a varied look for his march. Done here because if you do it earlier (eg Spawn, StartTask), the
 	// pose param gets overwritten.
@@ -404,6 +406,7 @@ bool CNPC_CombineS::IsHeavyDamage( const CTakeDamageInfo &info )
 	return BaseClass::IsHeavyDamage( info );
 }
 
+//SecobMod
 #ifdef HL2_EPISODIC
 //-----------------------------------------------------------------------------
 // Purpose: Translate base class activities into combot activites

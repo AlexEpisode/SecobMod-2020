@@ -800,7 +800,6 @@ void CWeaponCrossbow::SetSkin( int skinNum )
 //-----------------------------------------------------------------------------
 // Purpose: 
 //-----------------------------------------------------------------------------
-//SecobMod__Information Fixes sounds not working with the crossbow.
 void CWeaponCrossbow::DoLoadEffect( void )
 {
 	SetSkin( BOLT_SKIN_GLOW );

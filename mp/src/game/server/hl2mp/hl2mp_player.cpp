@@ -692,7 +692,8 @@ void CHL2MP_Player::SetPlayerTeamModel( void )
 
 	if ( modelIndex == -1 || ValidatePlayerModel( szModelName ) == false )
 	{
-		szModelName = "models/sdk/humans/group03/police_05.mdl";//SecobMod__ChangeME!
+		//SecobMod__ChangeME - Team's player model!
+		szModelName = "models/sdk/humans/group03/police_05.mdl";
 		m_iModelType = TEAM_COMBINE;
 
 		char szReturnString[512];
@@ -793,7 +794,8 @@ void CHL2MP_Player::SetPlayerModel( void )
 
 	if ( modelIndex == -1 )
 	{
-		szModelName = "models/sdk/humans/group03/police_05.mdl";//SecobMod__ChangeME!
+		//SecobMod__ChangeME! - Team's player model.
+		szModelName = "models/sdk/humans/group03/police_05.mdl";
 		m_iModelType = TEAM_COMBINE;
 
 		char szReturnString[512];
@@ -949,27 +951,53 @@ void CHL2MP_Player::NoteWeaponFired( void )
 }
 
 extern ConVar sv_maxunlag;
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-bool CHL2MP_Player::WantsLagCompensationOnEntity( const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const 
-{
-	// No need to lag compensate at all if we're not attacking in this command and
-	// we haven't attacked recently.
-	if ( !( pCmd->buttons & IN_ATTACK ) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
-		return false;
+	#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+	bool CHL2MP_Player::WantsLagCompensationOnEntity( const CBaseEntity *pEntity, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const 
+	{
+		// No need to lag compensate at all if we're not attacking in this command and
+		// we haven't attacked recently.
+		if ( !( pCmd->buttons & IN_ATTACK ) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
+			return false;
 
-	return BaseClass::WantsLagCompensationOnEntity( pEntity, pCmd, pEntityTransmitBits ); 
-#else
-bool CHL2MP_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
-{
-	// No need to lag compensate at all if we're not attacking in this command and
-	// we haven't attacked recently.
-	if ( !( pCmd->buttons & IN_ATTACK ) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
-		return false;
+		return BaseClass::WantsLagCompensationOnEntity( pEntity, pCmd, pEntityTransmitBits ); 
+	}
+	#else
+	bool CHL2MP_Player::WantsLagCompensationOnEntity( const CBasePlayer *pPlayer, const CUserCmd *pCmd, const CBitVec<MAX_EDICTS> *pEntityTransmitBits ) const
+	{
+		// No need to lag compensate at all if we're not attacking in this command and
+		// we haven't attacked recently.
+		if ( !( pCmd->buttons & IN_ATTACK ) && (pCmd->command_number - m_iLastWeaponFireUsercmd > 5) )
+			return false;
 
-	return BaseClass::WantsLagCompensationOnEntity( pPlayer, pCmd, pEntityTransmitBits );
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI
+		// If this entity hasn't been transmitted to us and acked, then don't bother lag compensating it.
+		if ( pEntityTransmitBits && !pEntityTransmitBits->Get( pPlayer->entindex() ) )
+			return false;
 
-}
+		const Vector &vMyOrigin = GetAbsOrigin();
+		const Vector &vHisOrigin = pPlayer->GetAbsOrigin();
+
+		// get max distance player could have moved within max lag compensation time, 
+		// multiply by 1.5 to to avoid "dead zones"  (sqrt(2) would be the exact value)
+		float maxDistance = 1.5 * pPlayer->MaxSpeed() * sv_maxunlag.GetFloat();
+
+		// If the player is within this distance, lag compensate them in case they're running past us.
+		if ( vHisOrigin.DistTo( vMyOrigin ) < maxDistance )
+			return true;
+
+		// If their origin is not within a 45 degree cone in front of us, no need to lag compensate.
+		Vector vForward;
+		AngleVectors( pCmd->viewangles, &vForward );
+		
+		Vector vDiff = vHisOrigin - vMyOrigin;
+		VectorNormalize( vDiff );
+
+		float flCosAngle = 0.707107f;	// 45 degree angle
+		if ( vForward.Dot( vDiff ) < flCosAngle )
+			return false;
+
+		return true;
+	}
+	#endif //SecobMod__Enable_Fixed_Multiplayer_AI
 
 Activity CHL2MP_Player::TranslateTeamActivity( Activity ActToTranslate )
 {
@@ -2986,7 +3014,7 @@ MessageEnd();
 #ifdef SecobMod__SAVERESTORE
 void CHL2MP_Player::SaveTransitionFile(void)
 {
-	FileHandle_t hFile = g_pFullFileSystem->Open( "cfg/transition.cfg", "w" );
+	FileHandle_t hFile = g_pFullFileSystem->Open( "transition.cfg", "w" );
 
 	if ( hFile == FILESYSTEM_INVALID_HANDLE )
 	{
@@ -3088,10 +3116,13 @@ void CHL2MP_Player::SaveTransitionFile(void)
 			//Creaye a temporary int for both primary and seconday clip ammo TYPES.
 			int ammoIndex_Pri = pCheck->GetPrimaryAmmoType();
 			int ammoIndex_Sec = pCheck->GetSecondaryAmmoType();
+
+			int ammoPrimaryClipLeft = pCheck->Clip1();
+			int ammoSecondaryClipLeft = pCheck->Clip2();
 			
 			//Get out weapons classname and get our text set up.
 			char pCheckWep[32];
-			Q_snprintf(pCheckWep,sizeof(pCheckWep), "\"Weapon_%i\" \"%s\"\n", WeaponSlot,pCheck->GetClassname());
+			Q_snprintf(pCheckWep,sizeof(pCheckWep), "\n\"Weapon_%i\" \"%s\"\n", WeaponSlot,pCheck->GetClassname());
 			//Write our weapon.
 			g_pFullFileSystem->Write( &pCheckWep, strlen(pCheckWep), hFile );
 		
@@ -3099,7 +3130,7 @@ void CHL2MP_Player::SaveTransitionFile(void)
 				{	
 				//Get out weapons primary clip and get our text set up.
 				char PrimaryClip[32];
-				Q_snprintf(PrimaryClip,sizeof(PrimaryClip), "\"Weapon_%i_PriClip\" \"%i\"\n", WeaponSlot,TempPrimaryClip);
+				Q_snprintf(PrimaryClip,sizeof(PrimaryClip), "\n\"Weapon_%i_PriClip\" \"%i\"\n", WeaponSlot,TempPrimaryClip);
 				//Now write our weapons primary clip count.
 				g_pFullFileSystem->Write( &PrimaryClip, strlen(PrimaryClip), hFile );
 					//Get out weapons primary clip ammo type.
@@ -3107,11 +3138,23 @@ void CHL2MP_Player::SaveTransitionFile(void)
 					{
 					char PrimaryWeaponClipAmmoType[32];
 					Q_snprintf(PrimaryWeaponClipAmmoType,sizeof(PrimaryWeaponClipAmmoType), "\"Weapon_%i_PriClipAmmo\" ", WeaponSlot);
+
 					char PrimaryClipAmmoType[32];
-					Q_snprintf(PrimaryClipAmmoType,sizeof(PrimaryClipAmmoType), "\"%s\"\n", GetAmmoDef()->GetAmmoOfIndex(ammoIndex_Pri)->pName);
-					//Now write our weapons primary clip count.
-					g_pFullFileSystem->Write( &PrimaryWeaponClipAmmoType, strlen(PrimaryWeaponClipAmmoType), hFile );
-					g_pFullFileSystem->Write( &PrimaryClipAmmoType, strlen(PrimaryClipAmmoType), hFile );
+					if (GetAmmoDef()->GetAmmoOfIndex(ammoIndex_Pri)->pName)
+					{
+						Q_snprintf(PrimaryClipAmmoType, sizeof(PrimaryClipAmmoType), "\"%s\"\n", GetAmmoDef()->GetAmmoOfIndex(ammoIndex_Pri)->pName);
+					}
+					else
+					{
+						Q_snprintf(PrimaryClipAmmoType, sizeof(PrimaryClipAmmoType), "\n");
+					}
+
+					char PrimaryClipAmmoLeft[32];
+					Q_snprintf(PrimaryClipAmmoLeft, sizeof(PrimaryClipAmmoLeft), "\"Weapon_%i_PriClipAmmoLeft\" \"%i\"\n", WeaponSlot, ammoPrimaryClipLeft);
+					//Now write our weapons primary clip count and how much of the clip is left.
+					g_pFullFileSystem->Write(&PrimaryWeaponClipAmmoType, strlen(PrimaryWeaponClipAmmoType), hFile);
+					g_pFullFileSystem->Write(&PrimaryClipAmmoType, strlen(PrimaryClipAmmoType), hFile);
+					g_pFullFileSystem->Write(&PrimaryClipAmmoLeft, strlen(PrimaryClipAmmoLeft), hFile);
 					}
 				}
 		
@@ -3119,7 +3162,7 @@ void CHL2MP_Player::SaveTransitionFile(void)
 				{	
 				//Get out weapons secondary clip and get our text set up.
 				char SecondaryClip[32];
-				Q_snprintf(SecondaryClip,sizeof(SecondaryClip), "\"Weapon_%i_SecClip\" \"%i\"\n", WeaponSlot,TempSecondaryClip);
+				Q_snprintf(SecondaryClip,sizeof(SecondaryClip), "\n\"Weapon_%i_SecClip\" \"%i\"\n", WeaponSlot,TempSecondaryClip);
 				//Now write our weapons secondary clip count.
 				g_pFullFileSystem->Write( &SecondaryClip, strlen(SecondaryClip), hFile );
 					//Get out weapons secondary clip ammo type.
@@ -3127,11 +3170,23 @@ void CHL2MP_Player::SaveTransitionFile(void)
 					{
 					char SecondaryWeaponClipAmmoType[32];
 					Q_snprintf(SecondaryWeaponClipAmmoType,sizeof(SecondaryWeaponClipAmmoType), "\"Weapon_%i_SecClipAmmo\" ", WeaponSlot);
+
 					char SecondaryClipAmmoType[32];
-					Q_snprintf(SecondaryClipAmmoType,sizeof(SecondaryClipAmmoType), "\"%s\"\n", GetAmmoDef()->GetAmmoOfIndex(ammoIndex_Pri)->pName);
+					if (GetAmmoDef()->GetAmmoOfIndex(ammoIndex_Pri)->pName)
+					{
+						Q_snprintf(SecondaryClipAmmoType, sizeof(SecondaryClipAmmoType), "\"%s\"\n", GetAmmoDef()->GetAmmoOfIndex(ammoIndex_Sec)->pName);
+					}
+					else
+					{
+						Q_snprintf(SecondaryClipAmmoType, sizeof(SecondaryClipAmmoType), "\n");
+					}
+
+					char SecondaryClipAmmoLeft[32];
+					Q_snprintf(SecondaryClipAmmoLeft, sizeof(SecondaryClipAmmoLeft), "\"Weapon_%i_SecClipAmmoLeft\" \"%i\"\n", WeaponSlot, ammoSecondaryClipLeft);
 					//Now write our weapons primary clip count.
-					g_pFullFileSystem->Write( &SecondaryWeaponClipAmmoType, strlen(SecondaryWeaponClipAmmoType), hFile );
-					g_pFullFileSystem->Write( &SecondaryClipAmmoType, strlen(SecondaryClipAmmoType), hFile );
+					g_pFullFileSystem->Write(&SecondaryWeaponClipAmmoType, strlen(SecondaryWeaponClipAmmoType), hFile );
+					g_pFullFileSystem->Write(&SecondaryClipAmmoType, strlen(SecondaryClipAmmoType), hFile );
+					g_pFullFileSystem->Write(&SecondaryClipAmmoLeft, strlen(SecondaryClipAmmoLeft), hFile);
 					}
 				}
 				
@@ -3141,7 +3196,7 @@ void CHL2MP_Player::SaveTransitionFile(void)
 		
 	  //Also write on a new line a } to close off this Players section. Now that we're done with all weapons.
 	  char SecClose[32];
-	  Q_snprintf(SecClose,sizeof(SecClose), "}\n\n",NULL);
+	  Q_snprintf(SecClose,sizeof(SecClose), "\n\n}\n\n",NULL);
 	  g_pFullFileSystem->Write( &SecClose, strlen(SecClose), hFile );
 	}
 	

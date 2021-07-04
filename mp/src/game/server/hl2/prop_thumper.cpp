@@ -13,6 +13,7 @@
 #include "npc_antlion.h"
 #include "te_effect_dispatch.h"
 
+//SecobMod
 #ifdef HL2_EPISODIC
 #define THUMPER_RADIUS m_iEffectRadius // this const is only used inside the thumper anyway
 #else
@@ -60,6 +61,7 @@ private:
 	
 	COutputEvent	m_OnThumped;	// Fired when thumper goes off
 
+//SecobMod
 #ifdef HL2_EPISODIC
 	int m_iEffectRadius;
 #endif
@@ -75,6 +77,7 @@ BEGIN_DATADESC( CPropThumper )
 	DEFINE_FIELD( m_hRepellantEnt, FIELD_EHANDLE ),
 	DEFINE_FIELD( m_iHammerAttachment, FIELD_INTEGER ),
 	DEFINE_KEYFIELD( m_iDustScale, FIELD_INTEGER, "dustscale" ),
+//SecobMod
 #ifdef HL2_EPISODIC
 	DEFINE_KEYFIELD( m_iEffectRadius, FIELD_INTEGER, "EffectRadius" ),
 #endif
@@ -136,6 +139,7 @@ void CPropThumper::Spawn( void )
 	if ( m_iDustScale == 0 )
 		 m_iDustScale = THUMPER_MIN_SCALE;
 
+//SecobMod
 #ifdef HL2_EPISODIC
 	if ( m_iEffectRadius == 0 )
 		m_iEffectRadius = 1000;

@@ -216,6 +216,7 @@ public:
 	
 	bool 			CanHeal();
 	bool 			ShouldHealTarget( CBaseEntity *pTarget, bool bActiveUse = false );
+//SecobMod
 #ifdef HL2_EPISODIC
 	bool 			ShouldHealTossTarget( CBaseEntity *pTarget, bool bActiveUse = false );
 #endif
@@ -223,6 +224,7 @@ public:
 
 	bool			ShouldLookForHealthItem();
 
+//SecobMod
 #ifdef HL2_EPISODIC
 	void			TossHealthKit( CBaseCombatCharacter *pThrowAt, const Vector &offset ); // create a healthkit and throw it at someone
 	void			InputForceHealthKitToss( inputdata_t &inputdata );

@@ -1891,6 +1891,7 @@ int CBaseHeadcrab::SelectSchedule( void )
 	{
 		bool bIsAlyxInDarknessMode = false;
 #ifdef HL2_EPISODIC
+		//SecobMod
 		bIsAlyxInDarknessMode = HL2MPRules()->IsAlyxInDarknessMode();
 #endif // HL2_EPISODIC
 
@@ -2073,6 +2074,7 @@ void CBaseHeadcrab::Ignite( float flFlameLifetime, bool bNPCOnly, float flSize, 
 	if( !bWasOnFire )
 	{
 #ifdef HL2_EPISODIC
+		//SecobMod
 		if ( HL2MPRules()->IsAlyxInDarknessMode() == true )
 		{
 			GetEffectEntity()->AddEffects( EF_DIMLIGHT );
@@ -3362,7 +3364,7 @@ void CBlackHeadcrab::Panic( float flDuration )
 	m_bPanicState = true;
 }
 
-
+//SecobMod
 #ifdef HL2_EPISODIC
 //-----------------------------------------------------------------------------
 // Purpose: Black headcrabs have 360-degree vision when they are in the ambush

@@ -2662,6 +2662,7 @@ void PhysCollisionDust( gamevcollisionevent_t *pEvent, surfacedata_t *phit )
 
 		break;
 
+//SecobMod
 #ifdef HL2_EPISODIC 
 		// this is probably redundant because BaseEntity::VHandleCollision should have already dispatched us elsewhere
 	case CHAR_TEX_WARPSHIELD:

@@ -3367,11 +3367,11 @@ bool CNPC_Strider::BecomeRagdoll( const CTakeDamageInfo &info, const Vector &for
 	{
 		// Otherwise just keel over
 		CRagdollProp *pRagdoll = NULL;
-#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
-		CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
-#else
-CBasePlayer *pPlayer = AI_GetSinglePlayer();
-#endif //SecobMod__Enable_Fixed_Multiplayer_AI		
+		#ifdef SecobMod__Enable_Fixed_Multiplayer_AI
+			CBasePlayer *pPlayer = UTIL_GetNearestPlayer(GetAbsOrigin()); 
+		#else
+			CBasePlayer *pPlayer = AI_GetSinglePlayer();
+		#endif //SecobMod__Enable_Fixed_Multiplayer_AI		
 
 		if ( pPlayer && mat_dxlevel.GetInt() > 0 )
 		{

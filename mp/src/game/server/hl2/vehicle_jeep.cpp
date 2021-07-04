@@ -143,10 +143,10 @@ IMPLEMENT_SERVERCLASS_ST( CPropJeep, DT_PropJeep )
 	SendPropBool( SENDINFO( m_bHeadlightIsOn ) ),
 END_SEND_TABLE();
 
-//SecobMod__Information: Use the hl2 vehicle as the base prop_vehicle_jeep when you don't have episodic content defined.
+// This is overriden for the episodic jeep
 #ifndef HL2_EPISODIC
 LINK_ENTITY_TO_CLASS( prop_vehicle_jeep, CPropJeep );
-#endif //HL2_EPISODIC
+#endif
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -1487,10 +1487,10 @@ void CPropJeep::ExitVehicle( int nRole )
 {
 	#ifdef SecobMod__ALLOW_JEEP_HEADLIGHTS
 	if (HeadlightIsOn())
-{
-HeadlightTurnOff();
-}
-#endif //SecobMod__ALLOW_JEEP_HEADLIGHTS
+	{
+	HeadlightTurnOff();
+	}
+	#endif //SecobMod__ALLOW_JEEP_HEADLIGHTS
 
 	BaseClass::ExitVehicle( nRole );
 

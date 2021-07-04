@@ -60,7 +60,7 @@
 		"pinCorner"		"0"
 		"visible"		"1"
 		"enabled"		"1"
-		"labelText"		"Message Title"
+		"labelText"		""
 		"textAlignment"		"west"
 		"dulltext"		"0"
 		"brighttext"		"0"

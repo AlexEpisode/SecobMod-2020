@@ -85,7 +85,7 @@ ConVar	g_antlionguard_hemorrhage( "g_antlionguard_hemorrhage", "1", FCVAR_NONE, 
 #define	ANTLIONGUARD_FOV_NORMAL			-0.4f
 
 // cavern guard's poisoning behavior
-//SSecobMod__MiscFixes
+//SecobMod__MiscFixes
 #ifdef HL2_EPISODIC
 #define ANTLIONGUARD_POISON_TO			12 // we only poison Gordon down to twelve to give him a chance to regen up to 20 by the next charge
 #endif
@@ -684,7 +684,7 @@ void CNPC_AntlionGuard::Precache( void )
 		PrecacheScriptSound( "NPC_AntlionGuard.StepLight" );
 		PrecacheScriptSound( "NPC_AntlionGuard.StepHeavy" );
 	}
-
+//SecobMod
 #ifdef HL2_EPISODIC
 	PrecacheScriptSound( "NPC_AntlionGuard.NearStepLight" );
 	PrecacheScriptSound( "NPC_AntlionGuard.NearStepHeavy" );
@@ -1484,6 +1484,7 @@ void CNPC_AntlionGuard::Shove( void )
 			pHurt->ApplyAbsVelocityImpulse( forward * 400 + up * 150 );
 
 			// in the episodes, the cavern guard poisons the player
+//SecobMod
 #ifdef HL2_EPISODIC
 			// If I am a cavern guard attacking the player, and he still lives, then poison him too.
 			if ( m_bInCavern && pHurt->IsPlayer() && pHurt->IsAlive() && pHurt->m_iHealth > ANTLIONGUARD_POISON_TO)
@@ -1894,6 +1895,7 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 	{
 		if ( HasSpawnFlags(SF_ANTLIONGUARD_INSIDE_FOOTSTEPS) )
 		{
+//SecobMod
 #ifdef HL2_EPISODIC
 			Footstep( false );
 #else 
@@ -1902,6 +1904,7 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 		}
 		else
 		{
+//SecobMod
 #ifdef HL2_EPISODIC
 			Footstep( false );
 #else 
@@ -1915,6 +1918,7 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 	{
 		if ( HasSpawnFlags(SF_ANTLIONGUARD_INSIDE_FOOTSTEPS) )
 		{
+//SecobMod
 #ifdef HL2_EPISODIC
 			Footstep( true );
 #else 
@@ -1923,6 +1927,7 @@ void CNPC_AntlionGuard::HandleAnimEvent( animevent_t *pEvent )
 		}
 		else
 		{
+//SecobMod
 #ifdef HL2_EPISODIC
 			Footstep( true );
 #else 
@@ -2571,6 +2576,7 @@ void ApplyChargeDamage( CBaseEntity *pAntlionGuard, CBaseEntity *pTarget, float 
 	CTakeDamageInfo	info( pAntlionGuard, pAntlionGuard, vecForce, offset, flDamage, DMG_CLUB );
 	pTarget->TakeDamage( info );
 
+//SecobMod
 #ifdef HL2_EPISODIC
 	// If I am a cavern guard attacking the player, and he still lives, then poison him too.
 	Assert( dynamic_cast<CNPC_AntlionGuard *>(pAntlionGuard) );
@@ -4532,7 +4538,7 @@ bool CNPC_AntlionGuard::QueryHearSound( CSound *pSound )
 	return BaseClass::QueryHearSound( pSound );
 }
 
-
+//SecobMod
 #ifdef HL2_EPISODIC
 //---------------------------------------------------------
 // Prevent the cavern guard from using stopping paths, as it occasionally forces him off the navmesh.

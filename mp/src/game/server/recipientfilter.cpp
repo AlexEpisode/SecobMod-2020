@@ -13,6 +13,7 @@
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
 
+//SecobMod - Still required?
 extern ConVar BreenCastAudio;
 
 static IPredictionSystem g_RecipientFilterPredictionSystem;
@@ -100,7 +101,7 @@ void CRecipientFilter::AddAllPlayers( void )
 	}
 }
 
-void CRecipientFilter::AddRecipient( CBasePlayer *player )
+void CRecipientFilter::AddRecipient( const CBasePlayer *player )
 {
 	Assert( player );
 
@@ -343,7 +344,7 @@ CTeamRecipientFilter::CTeamRecipientFilter( int team, bool isReliable )
 		if ( pPlayer->GetTeamNumber() != team )
 		{
 			//If we're in the spectator team then we should be getting whatever messages the person I'm spectating gets.
-			if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR && (pPlayer->GetObserverMode() == OBS_MODE_IN_EYE || pPlayer->GetObserverMode() == OBS_MODE_CHASE) )
+			if ( pPlayer->GetTeamNumber() == TEAM_SPECTATOR && (pPlayer->GetObserverMode() == OBS_MODE_IN_EYE || pPlayer->GetObserverMode() == OBS_MODE_CHASE || pPlayer->GetObserverMode() == OBS_MODE_POI) )
 			{
 				if ( pPlayer->GetObserverTarget() )
 				{
